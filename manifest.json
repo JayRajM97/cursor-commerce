@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Hesitate Fit Assistant",
+  "description": "A cursor-native apparel shopping assistant that detects size hesitation and offers fit help.",
+  "version": "0.1.0",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "css": ["src/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/gymshark.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_title": "Hesitate Fit Assistant"
+  }
+}

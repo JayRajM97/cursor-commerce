@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cursor-Native Shopping Companion Thesis</title>
+    <style>
+      :root {
+        --ink: #111111;
+        --paper: #fbfaf7;
+        --muted: #66645f;
+        --line: #dedbd2;
+        --blue: #246bfe;
+        --green: #1f6f43;
+        --coral: #e55f45;
+        --charcoal: #23262d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background:
+          linear-gradient(90deg, rgba(17, 17, 17, 0.035) 1px, transparent 1px),
+          linear-gradient(rgba(17, 17, 17, 0.035) 1px, transparent 1px),
+          var(--paper);
+        background-size: 42px 42px;
+        color: var(--ink);
+        font-family: "Avenir Next", "Helvetica Neue", Helvetica, sans-serif;
+        margin: 0;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .shell {
+        margin: 0 auto;
+        max-width: 1180px;
+        padding: 22px 24px 72px;
+      }
+
+      .nav {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 54px;
+      }
+
+      .brand {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .brand img {
+        height: 28px;
+        object-fit: contain;
+        width: 42px;
+      }
+
+      .nav-actions {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+      }
+
+      .button {
+        align-items: center;
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: 13px;
+        font-weight: 850;
+        height: 42px;
+        justify-content: center;
+        letter-spacing: 0;
+        padding: 0 16px;
+      }
+
+      .button.primary {
+        background: var(--ink);
+        color: #ffffff;
+      }
+
+      .hero {
+        display: grid;
+        gap: 42px;
+        grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+        margin-bottom: 68px;
+      }
+
+      .eyebrow {
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        margin: 0 0 14px;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-size: clamp(46px, 7vw, 92px);
+        letter-spacing: 0;
+        line-height: 0.92;
+        margin: 0;
+        max-width: 850px;
+      }
+
+      .hero-copy {
+        color: #383631;
+        font-size: 19px;
+        line-height: 1.48;
+        margin: 24px 0 0;
+        max-width: 710px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .stage {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 70px rgba(17, 17, 17, 0.12);
+        min-height: 500px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .stage-header {
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        height: 48px;
+        justify-content: space-between;
+        padding: 0 16px;
+      }
+
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+
+      .dots span {
+        background: #d8d5cc;
+        border-radius: 999px;
+        height: 8px;
+        width: 8px;
+      }
+
+      .stage-body {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 1fr 0.82fr;
+        padding: 16px;
+      }
+
+      .mini-gallery {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mini-shot {
+        background: #eeeeec;
+        min-height: 188px;
+        overflow: hidden;
+      }
+
+      .mini-shot img {
+        display: block;
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+      }
+
+      .mini-details {
+        padding-top: 8px;
+      }
+
+      .mini-details h2 {
+        font-size: 20px;
+        letter-spacing: 0;
+        line-height: 1.05;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+      }
+
+      .mini-price {
+        font-weight: 900;
+        margin-bottom: 24px;
+      }
+
+      .mini-sizes {
+        display: grid;
+        gap: 7px;
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .mini-sizes span {
+        align-items: center;
+        border: 1px solid #c9c6bd;
+        display: flex;
+        font-size: 12px;
+        font-weight: 900;
+        height: 40px;
+        justify-content: center;
+      }
+
+      .stage-metrics {
+        display: grid;
+        gap: 7px;
+        margin-top: 18px;
+      }
+
+      .stage-metrics span {
+        background: #f3f1eb;
+        border: 1px solid var(--line);
+        color: #4c4943;
+        display: block;
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.25;
+        padding: 8px;
+      }
+
+      .companion-demo {
+        align-items: center;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 999px;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+        display: flex;
+        gap: 8px;
+        left: 46%;
+        padding: 6px 14px 6px 7px;
+        position: absolute;
+        top: 47%;
+      }
+
+      .companion-demo img {
+        height: 18px;
+        object-fit: contain;
+        width: 22px;
+      }
+
+      .companion-demo span {
+        font-size: 12px;
+        font-weight: 850;
+        white-space: nowrap;
+      }
+
+      .tabs {
+        margin-bottom: 70px;
+      }
+
+      .tab-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .tab-button {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 850;
+        height: 42px;
+        padding: 0 16px;
+      }
+
+      .tab-button[aria-selected="true"] {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #ffffff;
+      }
+
+      .tab-panel {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: grid;
+        gap: 34px;
+        grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+        min-height: 430px;
+        padding: 34px;
+      }
+
+      .tab-panel[hidden] {
+        display: none;
+      }
+
+      .tab-panel h2,
+      .section-title {
+        font-size: clamp(30px, 4vw, 54px);
+        letter-spacing: 0;
+        line-height: 0.96;
+        margin: 0;
+      }
+
+      .tab-panel p {
+        color: #3d3a35;
+        font-size: 17px;
+        line-height: 1.55;
+        margin: 20px 0 0;
+      }
+
+      .example-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .example {
+        border: 1px solid var(--line);
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 90px 1fr;
+        min-height: 94px;
+        padding: 14px;
+      }
+
+      .example code {
+        align-items: center;
+        background: #f0eee8;
+        color: var(--ink);
+        display: flex;
+        font-family: "SF Mono", Consolas, monospace;
+        font-size: 11px;
+        font-weight: 800;
+        justify-content: center;
+        letter-spacing: 0;
+        text-align: center;
+      }
+
+      .example strong {
+        display: block;
+        font-size: 15px;
+        margin-bottom: 5px;
+      }
+
+      .example span {
+        color: var(--muted);
+        display: block;
+        font-size: 13px;
+        line-height: 1.38;
+      }
+
+      .playbook {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 70px;
+      }
+
+      .play-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        min-height: 250px;
+        padding: 22px;
+      }
+
+      .play-card b {
+        align-items: center;
+        border-radius: 999px;
+        color: #ffffff;
+        display: inline-flex;
+        font-size: 12px;
+        height: 26px;
+        justify-content: center;
+        margin-bottom: 34px;
+        padding: 0 10px;
+      }
+
+      .play-card:nth-child(1) b {
+        background: var(--blue);
+      }
+
+      .play-card:nth-child(2) b {
+        background: var(--green);
+      }
+
+      .play-card:nth-child(3) b {
+        background: var(--coral);
+      }
+
+      .play-card:nth-child(4) b {
+        background: var(--charcoal);
+      }
+
+      .play-card:nth-child(5) b {
+        background: #7a4f1f;
+      }
+
+      .play-card:nth-child(6) b {
+        background: #8b3152;
+      }
+
+      .play-card h3 {
+        font-size: 22px;
+        letter-spacing: 0;
+        line-height: 1.05;
+        margin: 0 0 12px;
+      }
+
+      .play-card p {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.48;
+        margin: 0;
+      }
+
+      .action-band {
+        align-items: center;
+        background: var(--charcoal);
+        color: #ffffff;
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 32px;
+      }
+
+      .action-band h2 {
+        font-size: clamp(28px, 4vw, 48px);
+        letter-spacing: 0;
+        line-height: 0.98;
+        margin: 0;
+      }
+
+      .action-band p {
+        color: #d6d7db;
+        font-size: 15px;
+        line-height: 1.45;
+        margin: 12px 0 0;
+        max-width: 720px;
+      }
+
+      .action-band .button {
+        background: #ffffff;
+        border-color: #ffffff;
+        color: var(--ink);
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .tab-panel,
+        .action-band {
+          grid-template-columns: 1fr;
+        }
+
+        .playbook {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          font-size: 52px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          padding: 18px 14px 44px;
+        }
+
+        .nav {
+          align-items: flex-start;
+          gap: 14px;
+          margin-bottom: 40px;
+        }
+
+        .nav-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .stage-body {
+          grid-template-columns: 1fr;
+        }
+
+        .tab-panel {
+          padding: 22px;
+        }
+
+        .example {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="nav">
+        <a class="brand" href="./thesis.html">
+          <img src="./assets/gymshark.png" alt="" />
+          <span>Cursor Commerce</span>
+        </a>
+        <div class="nav-actions">
+          <a class="button" href="./demo-apparel-page.html">Open Demo</a>
+          <a class="button primary" href="#view-action">View It In Action</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Product thesis</p>
+          <h1>A cursor-native conversion layer for apparel product pages.</h1>
+          <p class="hero-copy">
+            The prototype watches shopping behavior directly on the PDP: size hesitation, image interest, delivery
+            checking, quantity changes, review reading, and time-on-page. It responds at the exact point of uncertainty
+            with a small cursor-side assistant instead of a generic chatbot.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="./demo-apparel-page.html">View It In Action</a>
+            <a class="button" href="#examples">See Examples</a>
+          </div>
+        </div>
+
+        <div class="stage" aria-label="Shopping companion interface preview">
+          <div class="stage-header">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <strong>Gymshark PDP</strong>
+          </div>
+          <div class="stage-body">
+            <div class="mini-gallery">
+              <div class="mini-shot">
+                <img alt="Activewear product preview" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=640&q=80" />
+              </div>
+              <div class="mini-shot">
+                <img alt="Workout product preview" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=640&q=80" />
+              </div>
+            </div>
+            <div class="mini-details">
+              <h2>Vital Sweetheart Neck Crop Top</h2>
+              <div class="mini-price">$64</div>
+              <div class="mini-sizes">
+                <span>XXS</span>
+                <span>XS</span>
+                <span>S</span>
+                <span>M</span>
+                <span>L</span>
+                <span>XL</span>
+              </div>
+              <div class="stage-metrics">
+                <span>Delivery: 3-5 days</span>
+                <span>Reviews: sleeves run snug</span>
+                <span>Offer: XYZ10 after dwell</span>
+              </div>
+            </div>
+          </div>
+          <div class="companion-demo">
+            <img src="./assets/gymshark.png" alt="" />
+            <span>Need fit help?</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="tabs" aria-label="Product thesis tabs">
+        <div class="tab-list" role="tablist">
+          <button class="tab-button" type="button" role="tab" aria-selected="true" aria-controls="tab-thesis" id="tab-button-thesis">Thesis</button>
+          <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab-signals" id="tab-button-signals">Signals</button>
+          <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab-interventions" id="tab-button-interventions">Interventions</button>
+          <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab-v1" id="tab-button-v1">V1 Scope</button>
+        </div>
+
+        <section class="tab-panel" id="tab-thesis" role="tabpanel" aria-labelledby="tab-button-thesis">
+          <div>
+            <h2>Most shoppers do not ask. They hesitate.</h2>
+            <p>
+              A shopper might never open a chat bubble, but they will inspect sizes, revisit images, read reviews,
+              check delivery, change quantity, and sit on the page before deciding. Those behaviors are live intent.
+            </p>
+          </div>
+          <div class="example-grid">
+            <div class="example">
+              <code>size</code>
+              <div><strong>Fit uncertainty</strong><span>Repeated size activity means the shopper may need sizing confidence.</span></div>
+            </div>
+            <div class="example">
+              <code>image</code>
+              <div><strong>Visual intent</strong><span>Image focus can become a virtual try-on prompt, not a fit prompt.</span></div>
+            </div>
+            <div class="example">
+              <code>dwell</code>
+              <div><strong>Purchase readiness</strong><span>Long page time can trigger a checkout nudge or coupon.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-signals" role="tabpanel" aria-labelledby="tab-button-signals" hidden>
+          <div>
+            <h2>The PDP is a map of intent signals.</h2>
+            <p>
+              We do not need screen vision for the first version. DOM events tell us enough: size hovers, image
+              interest, delivery checks, quantity changes, review reading, and product dwell.
+            </p>
+          </div>
+          <div class="example-grid">
+            <div class="example">
+              <code>size</code>
+              <div><strong>Repeated size events</strong><span>Hover XS, click M, open Size Guide. Trigger fit help only inside this area.</span></div>
+            </div>
+            <div class="example">
+              <code>try-on</code>
+              <div><strong>Image focus</strong><span>Hover or click product images. Ask if they want to see the item on themselves.</span></div>
+            </div>
+            <div class="example">
+              <code>ship</code>
+              <div><strong>Delivery uncertainty</strong><span>Prompt for pincode when the shopper checks delivery or returns.</span></div>
+            </div>
+            <div class="example">
+              <code>time</code>
+              <div><strong>30-second product dwell</strong><span>If the shopper stays, offer a light discount nudge with XYZ10.</span></div>
+            </div>
+            <div class="example">
+              <code>qty</code>
+              <div><strong>Quantity change</strong><span>If they move to two pieces, offer a second-item discount.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-interventions" role="tabpanel" aria-labelledby="tab-button-interventions" hidden>
+          <div>
+            <h2>Each intervention belongs to one zone.</h2>
+            <p>
+              The assistant should feel like a retail associate who knows when to speak softly. It should not interrupt
+              every click, image view, or scroll. The message must match the part of the page the shopper is using.
+            </p>
+          </div>
+          <div class="example-grid">
+            <div class="example">
+              <code>fit</code>
+              <div><strong>"Need fit help?"</strong><span>Appears only after repeated behavior around size selectors or the size guide.</span></div>
+            </div>
+            <div class="example">
+              <code>try-on</code>
+              <div><strong>"Want to see it on yourself?"</strong><span>Appears around product images, then opens upload-based try-on.</span></div>
+            </div>
+            <div class="example">
+              <code>offer</code>
+              <div><strong>"Take XYZ10 for 10% off."</strong><span>Appears after 30 seconds on the page, then Space adds the product to bag.</span></div>
+            </div>
+            <div class="example">
+              <code>ship</code>
+              <div><strong>"Check delivery timing?"</strong><span>Appears around delivery/returns and asks for pincode.</span></div>
+            </div>
+            <div class="example">
+              <code>review</code>
+              <div><strong>"Want the review pattern?"</strong><span>Summarizes common fit complaints and quality signals.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-v1" role="tabpanel" aria-labelledby="tab-button-v1" hidden>
+          <div>
+            <h2>Scope it as a sequence of buying moments.</h2>
+            <p>
+              The first version should prove that the assistant can wait, notice, and intervene with the right action.
+              From there, expand by adding one more shopper uncertainty at a time.
+            </p>
+          </div>
+          <div class="example-grid">
+            <div class="example">
+              <code>V1</code>
+              <div><strong>Size help</strong><span>Repeated size-area behavior opens fit guidance through the assistant drawer.</span></div>
+            </div>
+            <div class="example">
+              <code>V1</code>
+              <div><strong>Try-on prompt</strong><span>Product image attention opens a local upload preview for virtual try-on.</span></div>
+            </div>
+            <div class="example">
+              <code>V1</code>
+              <div><strong>Discount after dwell</strong><span>30 seconds on the product page triggers XYZ10 and Space adds to bag.</span></div>
+            </div>
+            <div class="example">
+              <code>V2</code>
+              <div><strong>Delivery, review, quantity</strong><span>Add pincode timing, review summaries, and second-item upsell prompts.</span></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="playbook" id="examples">
+        <article class="play-card">
+          <b>Example 01</b>
+          <h3>Size hesitation</h3>
+          <p>The shopper hovers sizes, clicks M, returns to Size Guide, and pauses. The assistant types "Need fit help?" near the cursor.</p>
+        </article>
+        <article class="play-card">
+          <b>Example 02</b>
+          <h3>Product dwell</h3>
+          <p>The shopper spends 30 seconds on the PDP. The assistant offers XYZ10 and lets Space add the item to bag.</p>
+        </article>
+        <article class="play-card">
+          <b>Example 03</b>
+          <h3>Virtual try-on</h3>
+          <p>The shopper studies product images. The assistant asks if they want to see it on themselves and opens an upload panel.</p>
+        </article>
+        <article class="play-card">
+          <b>Example 04</b>
+          <h3>Delivery timing</h3>
+          <p>The shopper checks delivery or returns. The assistant asks for pincode and estimates when the product will arrive.</p>
+        </article>
+        <article class="play-card">
+          <b>Example 05</b>
+          <h3>Review summary</h3>
+          <p>The shopper lingers near reviews. The assistant summarizes the pattern: sleeves run snug, fabric feels soft, neckline is liked.</p>
+        </article>
+        <article class="play-card">
+          <b>Example 06</b>
+          <h3>Quantity upsell</h3>
+          <p>The shopper increases quantity. The assistant offers a small second-piece discount to move the basket value up.</p>
+        </article>
+      </section>
+
+      <section class="action-band" id="view-action">
+        <div>
+          <h2>View it in action on the product page.</h2>
+          <p>
+            Try the two live behaviors: interact around the size selector a few times for fit help, then reload and stay
+            on the page for 30 seconds to see the discount prompt.
+          </p>
+        </div>
+        <a class="button" href="./demo-apparel-page.html">Open PDP Demo</a>
+      </section>
+    </main>
+
+    <script>
+      const tabButtons = [...document.querySelectorAll(".tab-button")];
+      const panels = [...document.querySelectorAll(".tab-panel")];
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          tabButtons.forEach((item) => item.setAttribute("aria-selected", String(item === button)));
+          panels.forEach((panel) => {
+            panel.hidden = panel.id !== button.getAttribute("aria-controls");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

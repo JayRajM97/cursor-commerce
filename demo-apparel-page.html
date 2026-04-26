@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gymshark PDP Demo</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+    <style>
+      :root {
+        --border: #dfdfdf;
+        --muted: #666666;
+        --ink: #111111;
+      }
+
+      body {
+        background: #ffffff;
+        color: var(--ink);
+        font-family: Inter, Arial, Helvetica, sans-serif;
+        margin: 0;
+      }
+
+      .site-header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        height: 64px;
+        padding: 0 28px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .site-header nav {
+        display: flex;
+        gap: 22px;
+        font-size: 13px;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .site-logo {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      .site-logo img {
+        height: 26px;
+        object-fit: contain;
+        width: 38px;
+      }
+
+      .header-actions {
+        justify-content: flex-end;
+      }
+
+      .pdp {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+        gap: 28px;
+        margin: 0 auto;
+        max-width: 1440px;
+        padding: 18px 28px 60px;
+      }
+
+      .gallery {
+        display: grid;
+        gap: 12px;
+      }
+
+      .product-shot {
+        background: #efefef;
+        border: 0;
+        cursor: pointer;
+        display: block;
+        margin: 0;
+        min-height: 720px;
+        overflow: hidden;
+        padding: 0;
+        position: relative;
+        width: 100%;
+      }
+
+      .product-shot img {
+        display: block;
+        height: 100%;
+        object-fit: cover;
+        transition: scale 180ms ease;
+        width: 100%;
+      }
+
+      .product-shot:hover img {
+        scale: 1.025;
+      }
+
+      .product-shot span {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 999px;
+        bottom: 14px;
+        font-size: 12px;
+        font-weight: 850;
+        left: 14px;
+        padding: 8px 10px;
+        position: absolute;
+      }
+
+      .carousel-thumbs {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .carousel-thumb {
+        background: #efefef;
+        border: 1px solid transparent;
+        cursor: pointer;
+        height: 112px;
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .carousel-thumb.is-active {
+        border-color: #111111;
+        outline: 2px solid #111111;
+        outline-offset: -2px;
+      }
+
+      .carousel-thumb img {
+        display: block;
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+      }
+
+      .details {
+        align-self: start;
+        padding-top: 14px;
+        position: sticky;
+        top: 86px;
+      }
+
+      .rating {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 22px;
+        letter-spacing: 0;
+        line-height: 1.18;
+        margin: 0 0 9px;
+        text-transform: uppercase;
+      }
+
+      .product-price {
+        font-size: 16px;
+        font-weight: 850;
+        margin-bottom: 24px;
+      }
+
+      .option-head {
+        align-items: center;
+        display: flex;
+        font-size: 13px;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .option-head strong {
+        text-transform: uppercase;
+      }
+
+      .size-guide {
+        background: transparent;
+        border: 0;
+        color: #111111;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 850;
+        text-decoration: underline;
+      }
+
+      .swatches,
+      .sizes {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+
+      .swatches {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .swatch {
+        border: 1px solid var(--border);
+        cursor: pointer;
+        height: 76px;
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .swatch.is-selected {
+        border-color: #111111;
+        outline: 2px solid #111111;
+        outline-offset: -2px;
+      }
+
+      .swatch img {
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+      }
+
+      .sizes {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .sizes button {
+        background: #ffffff;
+        border: 1px solid #bdbdbd;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 850;
+        height: 48px;
+      }
+
+      .sizes button:focus,
+      .sizes button:hover {
+        border-color: #111111;
+        outline: 2px solid #111111;
+        outline-offset: -2px;
+      }
+
+      .add {
+        background: #111111;
+        border: 0;
+        color: #ffffff;
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 900;
+        height: 54px;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        width: 100%;
+      }
+
+      .add.is-added {
+        background: #1f6f43;
+      }
+
+      .quantity-row {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        margin: -4px 0 18px;
+      }
+
+      .quantity-row strong {
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      .quantity-control {
+        align-items: center;
+        border: 1px solid #bdbdbd;
+        display: grid;
+        grid-template-columns: 38px 44px 38px;
+        height: 40px;
+      }
+
+      .quantity-control button {
+        background: #ffffff;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-size: 18px;
+        height: 100%;
+      }
+
+      .quantity-control span {
+        align-items: center;
+        border-left: 1px solid #e0e0e0;
+        border-right: 1px solid #e0e0e0;
+        display: flex;
+        font-size: 13px;
+        font-weight: 850;
+        height: 100%;
+        justify-content: center;
+      }
+
+      .delivery-check {
+        border-top: 1px solid var(--border);
+        padding: 16px 0;
+      }
+
+      .delivery-check label {
+        display: block;
+        font-size: 13px;
+        font-weight: 850;
+        margin-bottom: 9px;
+        text-transform: uppercase;
+      }
+
+      .delivery-check div {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: 1fr 92px;
+      }
+
+      .delivery-check input {
+        border: 1px solid #bdbdbd;
+        font: inherit;
+        font-size: 13px;
+        height: 42px;
+        padding: 0 10px;
+      }
+
+      .delivery-check button {
+        background: #ffffff;
+        border: 1px solid #111111;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .delivery-result {
+        color: #1f6f43;
+        font-size: 12px;
+        font-weight: 800;
+        margin-top: 8px;
+        min-height: 16px;
+      }
+
+      .klarna,
+      .accordion {
+        border-top: 1px solid var(--border);
+        color: #333333;
+        font-size: 13px;
+        line-height: 1.45;
+        padding: 16px 0;
+      }
+
+      .accordion {
+        display: grid;
+        gap: 14px;
+      }
+
+      .accordion div {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 14px;
+      }
+
+      .accordion h2 {
+        align-items: center;
+        display: flex;
+        font-size: 13px;
+        font-weight: 850;
+        justify-content: space-between;
+        letter-spacing: 0;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+      }
+
+      .accordion p,
+      .accordion li {
+        color: #555555;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .accordion p {
+        margin: 0;
+      }
+
+      .accordion ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      @media (max-width: 980px) {
+        .pdp {
+          grid-template-columns: 1fr;
+        }
+
+        .details {
+          position: static;
+        }
+      }
+
+      @media (max-width: 1180px) {
+        .pdp {
+          grid-template-columns: minmax(0, 1fr) 360px;
+        }
+
+        .product-shot {
+          min-height: 560px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .site-header {
+          grid-template-columns: 1fr auto;
+          padding: 0 16px;
+        }
+
+        .site-header nav {
+          display: none;
+        }
+
+        .pdp {
+          padding: 8px 0 40px;
+        }
+
+        .gallery {
+          grid-template-columns: 1fr;
+        }
+
+        .product-shot {
+          min-height: 480px;
+        }
+
+        .details {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav>
+        <span>Women</span>
+        <span>Men</span>
+        <span>Accessories</span>
+        <a href="./thesis.html">Thesis</a>
+      </nav>
+      <div class="site-logo">
+        <img src="./assets/gymshark.png" alt="" />
+        <span>GYMSHARK</span>
+      </div>
+      <nav class="header-actions">
+        <span>Search</span>
+        <span>Bag</span>
+      </nav>
+    </header>
+
+    <main class="pdp">
+      <section class="gallery" data-product-gallery>
+        <button class="product-shot" type="button" aria-label="Open product image" data-product-main-trigger>
+          <img
+            data-main-product-image
+            alt="Pink long sleeve crop top front"
+            src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80"
+          />
+          <span>Click image</span>
+        </button>
+        <div class="carousel-thumbs" aria-label="Product image carousel">
+          <button
+            class="carousel-thumb is-active"
+            type="button"
+            aria-label="Show front product image"
+            data-carousel-image="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80"
+            data-carousel-alt="Pink long sleeve crop top front"
+          >
+            <img alt="" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=240&q=80" />
+          </button>
+          <button
+            class="carousel-thumb"
+            type="button"
+            aria-label="Show studio product image"
+            data-carousel-image="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80"
+            data-carousel-alt="Activewear studio pose"
+          >
+            <img alt="" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=240&q=80" />
+          </button>
+          <button
+            class="carousel-thumb"
+            type="button"
+            aria-label="Show lifestyle product image"
+            data-carousel-image="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1200&q=80"
+            data-carousel-alt="Workout lifestyle image"
+          >
+            <img alt="" src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=240&q=80" />
+          </button>
+          <button
+            class="carousel-thumb"
+            type="button"
+            aria-label="Show yoga product image"
+            data-carousel-image="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=1200&q=80"
+            data-carousel-alt="Yoga activewear product image"
+          >
+            <img alt="" src="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=240&q=80" />
+          </button>
+        </div>
+      </section>
+
+      <aside class="details">
+        <div class="rating">★★★★★ <span>4.5</span></div>
+        <h1>Vital Sweetheart Neck Crop Top</h1>
+        <div class="product-price">$64</div>
+
+        <div class="option-head">
+          <strong>Colour</strong>
+          <span class="selected-colour">Pink</span>
+        </div>
+        <div class="swatches">
+          <button class="swatch is-selected" type="button" aria-label="Pink colour" data-colour="Pink">
+            <img alt="" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=220&q=80" />
+          </button>
+          <button class="swatch" type="button" aria-label="Black colour" data-colour="Black">
+            <img alt="" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=220&q=80" />
+          </button>
+          <button class="swatch" type="button" aria-label="Grey colour" data-colour="Grey">
+            <img alt="" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=220&q=80" />
+          </button>
+        </div>
+
+        <div class="option-head">
+          <strong>Size</strong>
+          <button class="size-guide" type="button">Size guide</button>
+        </div>
+        <div class="sizes" aria-label="Size selector">
+          <button type="button">XXS</button>
+          <button type="button">XS</button>
+          <button type="button">S</button>
+          <button type="button">M</button>
+          <button type="button">L</button>
+          <button type="button">XL</button>
+          <button type="button">XXL</button>
+        </div>
+
+        <div class="quantity-row">
+          <strong>Quantity</strong>
+          <div class="quantity-control" aria-label="Quantity selector">
+            <button type="button" data-quantity-minus aria-label="Decrease quantity">-</button>
+            <span data-quantity-value>1</span>
+            <button type="button" data-quantity-plus aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+
+        <button class="add" type="button">Add to bag</button>
+        <div class="klarna">Pay in 4 interest-free payments. Free returns on eligible orders.</div>
+        <section class="delivery-check">
+          <label for="pincode">Delivery date</label>
+          <div>
+            <input id="pincode" inputmode="numeric" placeholder="Enter pincode" />
+            <button type="button" class="delivery-button">Check</button>
+          </div>
+          <p class="delivery-result"></p>
+        </section>
+        <section class="accordion">
+          <div>
+            <h2>Product details <span>+</span></h2>
+            <p>Soft-touch Vital fabric with a sweetheart neckline, cropped length, and long sleeves for studio training or everyday layering.</p>
+          </div>
+          <div>
+            <h2>Size and fit <span>+</span></h2>
+            <ul>
+              <li>Fitted through the chest and arms.</li>
+              <li>Choose your usual size for a sculpted fit.</li>
+              <li>Size up if you prefer extra shoulder room.</li>
+            </ul>
+          </div>
+          <div>
+            <h2>Delivery and returns <span>+</span></h2>
+            <p>Standard delivery in 3-5 working days. Free returns within 30 days if tags are attached.</p>
+          </div>
+          <div>
+            <h2>Reviews <span>+</span></h2>
+            <p>Customers like the neckline and soft feel. Some mention the sleeves run snug if you are between sizes.</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <script>
+      const mainProductImage = document.querySelector("[data-main-product-image]");
+
+      document.querySelectorAll(".carousel-thumb").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".carousel-thumb").forEach((item) => item.classList.remove("is-active"));
+          button.classList.add("is-active");
+          mainProductImage.src = button.dataset.carouselImage;
+          mainProductImage.alt = button.dataset.carouselAlt;
+        });
+      });
+
+      const quantityValue = document.querySelector("[data-quantity-value]");
+      let quantity = 1;
+
+      function setQuantity(nextQuantity) {
+        quantity = Math.max(1, Math.min(5, nextQuantity));
+        quantityValue.textContent = quantity;
+        document.dispatchEvent(new CustomEvent("quantitychange", { detail: { quantity } }));
+      }
+
+      document.querySelector("[data-quantity-minus]").addEventListener("click", () => setQuantity(quantity - 1));
+      document.querySelector("[data-quantity-plus]").addEventListener("click", () => setQuantity(quantity + 1));
+
+      document.querySelectorAll(".swatch").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".swatch").forEach((item) => item.classList.remove("is-selected"));
+          button.classList.add("is-selected");
+          document.querySelector(".selected-colour").textContent = button.dataset.colour;
+        });
+      });
+
+      document.querySelector(".delivery-button").addEventListener("click", () => {
+        const pin = document.querySelector("#pincode").value.trim();
+        document.querySelector(".delivery-result").textContent = pin
+          ? `Estimated delivery to ${pin}: 3-5 working days.`
+          : "Enter a pincode to see delivery timing.";
+      });
+    </script>
+    <script src="./src/content.js"></script>
+  </body>
+</html>
