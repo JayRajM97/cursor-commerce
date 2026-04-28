@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gymshark PDP Demo</title>
-    <link rel="stylesheet" href="./src/styles.css?v=tryon-4" />
+    <link rel="stylesheet" href="./src/styles.css?v=tryon-5" />
     <style>
       :root {
         --border: #dfdfdf;
@@ -51,12 +51,37 @@
         gap: 10px;
         font-weight: 950;
         letter-spacing: 0;
+        position: relative;
       }
 
       .site-logo img {
         height: 26px;
         object-fit: contain;
         width: 38px;
+      }
+
+      .site-logo::after {
+        background: #111111;
+        color: #ffffff;
+        content: "Coupon: XYZ10";
+        font-size: 12px;
+        font-weight: 850;
+        left: 0;
+        opacity: 0;
+        padding: 9px 11px;
+        pointer-events: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        transform: translateY(-4px);
+        transition: opacity 140ms ease, transform 140ms ease;
+        white-space: nowrap;
+        z-index: 20;
+      }
+
+      .site-logo:hover::after,
+      .site-logo:focus-within::after {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       .thesis-link {
@@ -619,6 +644,6 @@
           : "Enter a pincode to see delivery timing.";
       });
     </script>
-    <script src="./src/content.js?v=tryon-4"></script>
+    <script src="./src/content.js?v=tryon-5"></script>
   </body>
 </html>

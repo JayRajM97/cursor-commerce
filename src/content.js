@@ -505,6 +505,12 @@
   }
 
   function bindListeners() {
+    document.querySelectorAll(".site-logo, .brand").forEach((element) => {
+      element.addEventListener("mouseenter", () => {
+        if (!state.drawerOpen) showTypewriter("discount");
+      });
+    });
+
     document.querySelectorAll("[data-product-main-trigger], [data-product-main-trigger] img").forEach((element) => {
       element.addEventListener("click", () => {
         if (!state.drawerOpen) showTypewriter("tryon");
