@@ -24,7 +24,7 @@
         background: #ffffff;
         border-bottom: 1px solid var(--border);
         display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        grid-template-columns: 1fr auto;
         height: 64px;
         padding: 0 28px;
         position: sticky;
@@ -40,6 +40,11 @@
         text-transform: uppercase;
       }
 
+      .site-header a {
+        color: #111111;
+        text-decoration: none;
+      }
+
       .site-logo {
         align-items: center;
         display: flex;
@@ -52,6 +57,21 @@
         height: 26px;
         object-fit: contain;
         width: 38px;
+      }
+
+      .thesis-link {
+        border: 1px solid #111111;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 10px 14px;
+        text-transform: uppercase;
+      }
+
+      .thesis-link:focus,
+      .thesis-link:hover {
+        background: #111111;
+        color: #ffffff;
+        outline: 0;
       }
 
       .header-actions {
@@ -73,12 +93,13 @@
       }
 
       .product-shot {
-        background: #efefef;
+        background: #eee8dc;
         border: 0;
         cursor: pointer;
         display: block;
+        height: clamp(560px, calc(100vh - 120px), 760px);
         margin: 0;
-        min-height: 720px;
+        min-height: 0;
         overflow: hidden;
         padding: 0;
         position: relative;
@@ -88,24 +109,13 @@
       .product-shot img {
         display: block;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         transition: scale 180ms ease;
         width: 100%;
       }
 
       .product-shot:hover img {
         scale: 1.025;
-      }
-
-      .product-shot span {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 999px;
-        bottom: 14px;
-        font-size: 12px;
-        font-weight: 850;
-        left: 14px;
-        padding: 8px 10px;
-        position: absolute;
       }
 
       .carousel-thumbs {
@@ -405,18 +415,14 @@
         }
 
         .product-shot {
-          min-height: 560px;
+          height: 620px;
         }
       }
 
       @media (max-width: 640px) {
         .site-header {
-          grid-template-columns: 1fr auto;
+          height: 58px;
           padding: 0 16px;
-        }
-
-        .site-header nav {
-          display: none;
         }
 
         .pdp {
@@ -428,7 +434,7 @@
         }
 
         .product-shot {
-          min-height: 480px;
+          height: 520px;
         }
 
         .details {
@@ -439,20 +445,11 @@
   </head>
   <body>
     <header class="site-header">
-      <nav>
-        <span>Women</span>
-        <span>Men</span>
-        <span>Accessories</span>
-        <a href="./thesis.html">Thesis</a>
-      </nav>
       <div class="site-logo">
         <img src="./assets/gymshark.png" alt="" />
         <span>GYMSHARK</span>
       </div>
-      <nav class="header-actions">
-        <span>Search</span>
-        <span>Bag</span>
-      </nav>
+      <a class="thesis-link" href="./thesis.html">Thesis</a>
     </header>
 
     <main class="pdp">
@@ -460,69 +457,68 @@
         <button class="product-shot" type="button" aria-label="Open product image" data-product-main-trigger>
           <img
             data-main-product-image
-            alt="Pink long sleeve crop top front"
-            src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80"
+            alt="Black Rival Seamless Midi Tank front"
+            src="./assets/rival-tank-front.webp"
           />
-          <span>Click image</span>
         </button>
         <div class="carousel-thumbs" aria-label="Product image carousel">
           <button
             class="carousel-thumb is-active"
             type="button"
             aria-label="Show front product image"
-            data-carousel-image="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80"
-            data-carousel-alt="Pink long sleeve crop top front"
+            data-carousel-image="./assets/rival-tank-front.webp"
+            data-carousel-alt="Black Rival Seamless Midi Tank front"
           >
-            <img alt="" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=240&q=80" />
+            <img alt="" src="./assets/rival-tank-front.webp" />
           </button>
           <button
             class="carousel-thumb"
             type="button"
-            aria-label="Show studio product image"
-            data-carousel-image="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80"
-            data-carousel-alt="Activewear studio pose"
+            aria-label="Show side product image"
+            data-carousel-image="./assets/rival-tank-side.webp"
+            data-carousel-alt="Black Rival Seamless Midi Tank side"
           >
-            <img alt="" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=240&q=80" />
+            <img alt="" src="./assets/rival-tank-side.webp" />
           </button>
           <button
             class="carousel-thumb"
             type="button"
-            aria-label="Show lifestyle product image"
-            data-carousel-image="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1200&q=80"
-            data-carousel-alt="Workout lifestyle image"
+            aria-label="Show back product image"
+            data-carousel-image="./assets/rival-tank-back.webp"
+            data-carousel-alt="Black Rival Seamless Midi Tank back"
           >
-            <img alt="" src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=240&q=80" />
+            <img alt="" src="./assets/rival-tank-back.webp" />
           </button>
           <button
             class="carousel-thumb"
             type="button"
-            aria-label="Show yoga product image"
-            data-carousel-image="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=1200&q=80"
-            data-carousel-alt="Yoga activewear product image"
+            aria-label="Show support detail product image"
+            data-carousel-image="./assets/rival-tank-support.webp"
+            data-carousel-alt="Black Rival Seamless Midi Tank support detail"
           >
-            <img alt="" src="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=240&q=80" />
+            <img alt="" src="./assets/rival-tank-support.webp" />
           </button>
         </div>
       </section>
 
       <aside class="details">
         <div class="rating">★★★★★ <span>4.5</span></div>
-        <h1>Vital Sweetheart Neck Crop Top</h1>
-        <div class="product-price">$64</div>
+        <h1>Rival Seamless Midi Tank</h1>
+        <div class="product-price">$44</div>
 
         <div class="option-head">
           <strong>Colour</strong>
-          <span class="selected-colour">Pink</span>
+          <span class="selected-colour">Black</span>
         </div>
         <div class="swatches">
-          <button class="swatch is-selected" type="button" aria-label="Pink colour" data-colour="Pink">
-            <img alt="" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=220&q=80" />
+          <button class="swatch is-selected" type="button" aria-label="Black colour" data-colour="Black">
+            <img alt="" src="./assets/rival-tank-front.webp" />
           </button>
-          <button class="swatch" type="button" aria-label="Black colour" data-colour="Black">
-            <img alt="" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=220&q=80" />
+          <button class="swatch" type="button" aria-label="Black side view" data-colour="Black">
+            <img alt="" src="./assets/rival-tank-side.webp" />
           </button>
-          <button class="swatch" type="button" aria-label="Grey colour" data-colour="Grey">
-            <img alt="" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=220&q=80" />
+          <button class="swatch" type="button" aria-label="Black back view" data-colour="Black">
+            <img alt="" src="./assets/rival-tank-back.webp" />
           </button>
         </div>
 
@@ -562,14 +558,14 @@
         <section class="accordion">
           <div>
             <h2>Product details <span>+</span></h2>
-            <p>Soft-touch Vital fabric with a sweetheart neckline, cropped length, and long sleeves for studio training or everyday layering.</p>
+            <p>Seamless midi tank with adjustable straps, a scoop neckline, and an inner shelf with removable cups for training or everyday layering.</p>
           </div>
           <div>
             <h2>Size and fit <span>+</span></h2>
             <ul>
-              <li>Fitted through the chest and arms.</li>
-              <li>Choose your usual size for a sculpted fit.</li>
-              <li>Size up if you prefer extra shoulder room.</li>
+              <li>Body-skimming fit with light support.</li>
+              <li>Choose your usual size for a close training fit.</li>
+              <li>Size up if you prefer more room through the bust.</li>
             </ul>
           </div>
           <div>
@@ -578,7 +574,7 @@
           </div>
           <div>
             <h2>Reviews <span>+</span></h2>
-            <p>Customers like the neckline and soft feel. Some mention the sleeves run snug if you are between sizes.</p>
+            <p>Customers like the clean straps and built-in support. Some mention the bust fits snug if you are between sizes.</p>
           </div>
         </section>
       </aside>

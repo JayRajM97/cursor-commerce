@@ -91,8 +91,9 @@
 
       .hero {
         display: grid;
-        gap: 42px;
-        grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+        align-items: start;
+        gap: 44px;
+        grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
         margin-bottom: 68px;
       }
 
@@ -106,19 +107,19 @@
       }
 
       h1 {
-        font-size: clamp(46px, 7vw, 92px);
+        font-size: clamp(38px, 4.8vw, 64px);
         letter-spacing: 0;
-        line-height: 0.92;
+        line-height: 1;
         margin: 0;
-        max-width: 850px;
+        max-width: 760px;
       }
 
       .hero-copy {
         color: #383631;
-        font-size: 19px;
+        font-size: 18px;
         line-height: 1.48;
         margin: 24px 0 0;
-        max-width: 710px;
+        max-width: 660px;
       }
 
       .hero-actions {
@@ -131,8 +132,8 @@
       .stage {
         background: #ffffff;
         border: 1px solid var(--line);
-        box-shadow: 0 24px 70px rgba(17, 17, 17, 0.12);
-        min-height: 500px;
+        box-shadow: 0 20px 54px rgba(17, 17, 17, 0.1);
+        min-height: 470px;
         overflow: hidden;
         position: relative;
       }
@@ -161,7 +162,7 @@
       .stage-body {
         display: grid;
         gap: 18px;
-        grid-template-columns: 1fr 0.82fr;
+        grid-template-columns: 0.95fr 0.9fr;
         padding: 16px;
       }
 
@@ -172,15 +173,15 @@
       }
 
       .mini-shot {
-        background: #eeeeec;
-        min-height: 188px;
+        background: #eee8dc;
+        min-height: 206px;
         overflow: hidden;
       }
 
       .mini-shot img {
         display: block;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         width: 100%;
       }
 
@@ -466,7 +467,7 @@
         }
 
         h1 {
-          font-size: 52px;
+          font-size: 44px;
         }
       }
 
@@ -536,15 +537,15 @@
           <div class="stage-body">
             <div class="mini-gallery">
               <div class="mini-shot">
-                <img alt="Activewear product preview" src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=640&q=80" />
+                <img alt="Black Rival Seamless Midi Tank front preview" src="./assets/rival-tank-front.webp" />
               </div>
               <div class="mini-shot">
-                <img alt="Workout product preview" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=640&q=80" />
+                <img alt="Black Rival Seamless Midi Tank side preview" src="./assets/rival-tank-side.webp" />
               </div>
             </div>
             <div class="mini-details">
-              <h2>Vital Sweetheart Neck Crop Top</h2>
-              <div class="mini-price">$64</div>
+              <h2>Rival Seamless Midi Tank</h2>
+              <div class="mini-price">$44</div>
               <div class="mini-sizes">
                 <span>XXS</span>
                 <span>XS</span>
@@ -555,7 +556,7 @@
               </div>
               <div class="stage-metrics">
                 <span>Delivery: 3-5 days</span>
-                <span>Reviews: sleeves run snug</span>
+                <span>Reviews: bust fits snug</span>
                 <span>Offer: XYZ10 after dwell</span>
               </div>
             </div>
@@ -716,7 +717,7 @@
         <article class="play-card">
           <b>Example 05</b>
           <h3>Review summary</h3>
-          <p>The shopper lingers near reviews. The assistant summarizes the pattern: sleeves run snug, fabric feels soft, neckline is liked.</p>
+          <p>The shopper lingers near reviews. The assistant summarizes the pattern: bust fits snug, straps feel secure, built-in support is liked.</p>
         </article>
         <article class="play-card">
           <b>Example 06</b>
