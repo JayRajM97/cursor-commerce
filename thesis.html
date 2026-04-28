@@ -360,6 +360,27 @@
         line-height: 1.38;
       }
 
+      .section-kicker {
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        margin: 0 0 10px;
+        text-transform: uppercase;
+      }
+
+      .section-intro {
+        margin: 0 0 24px;
+        max-width: 780px;
+      }
+
+      .section-intro p {
+        color: #3d3a35;
+        font-size: 16px;
+        line-height: 1.5;
+        margin: 12px 0 0;
+      }
+
       .playbook {
         display: grid;
         gap: 18px;
@@ -517,15 +538,15 @@
       <section class="hero">
         <div>
           <p class="eyebrow">Product thesis</p>
-          <h1>A cursor-native conversion layer for apparel product pages.</h1>
+          <h1>A cursor-native conversion layer for any commerce page.</h1>
           <p class="hero-copy">
-            The prototype watches shopping behavior directly on the PDP: size hesitation, image interest, delivery
-            checking, quantity changes, review reading, and time-on-page. It responds at the exact point of uncertainty
-            with a small cursor-side assistant instead of a generic chatbot.
+            Cursor Commerce watches the customer journey as it happens: what people hover, compare, revisit, upload,
+            check, abandon, and return to. Then it decides whether the shopper needs help and suggests the best next
+            action, from fit guidance to skin-context analysis, sneaker try-on, delivery clarity, reviews, or an offer.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="./demo-apparel-page.html">View It In Action</a>
-            <a class="button" href="#examples">See Examples</a>
+            <a class="button" href="#features">What It Can Do</a>
           </div>
         </div>
 
@@ -580,86 +601,89 @@
           <div>
             <h2>Most shoppers do not ask. They hesitate.</h2>
             <p>
-              A shopper might never open a chat bubble, but they will inspect sizes, revisit images, read reviews,
-              check delivery, change quantity, and sit on the page before deciding. Those behaviors are live intent.
+              A shopper might never open a chat bubble, but they still leave signals. They zoom into photos, compare
+              ingredients, inspect sizing, read reviews, check delivery, upload a reference, or pause before buying.
+              Those behaviors are live intent.
             </p>
           </div>
           <div class="example-grid">
             <div class="example">
-              <code>size</code>
-              <div><strong>Fit uncertainty</strong><span>Repeated size activity means the shopper may need sizing confidence.</span></div>
+              <code>watch</code>
+              <div><strong>Journey capture</strong><span>Collect page-level behavior across images, options, reviews, forms, dwell time, and return visits.</span></div>
             </div>
             <div class="example">
-              <code>image</code>
-              <div><strong>Visual intent</strong><span>Image focus can become a virtual try-on prompt, not a fit prompt.</span></div>
+              <code>infer</code>
+              <div><strong>Intent decisioning</strong><span>Decide whether the shopper wants help, and what type of help would be useful right now.</span></div>
             </div>
             <div class="example">
-              <code>dwell</code>
-              <div><strong>Purchase readiness</strong><span>Long page time can trigger a checkout nudge or coupon.</span></div>
+              <code>act</code>
+              <div><strong>Contextual suggestion</strong><span>Respond near the cursor with a small prompt, panel, upload flow, summary, or checkout nudge.</span></div>
             </div>
           </div>
         </section>
 
         <section class="tab-panel" id="tab-signals" role="tabpanel" aria-labelledby="tab-button-signals" hidden>
           <div>
-            <h2>The PDP is a map of intent signals.</h2>
+            <h2>The page is a map of customer journey signals.</h2>
             <p>
-              We do not need screen vision for the first version. DOM events tell us enough: size hovers, image
-              interest, delivery checks, quantity changes, review reading, and product dwell.
+              For the first version, DOM events are enough to build useful context: option hovers, image interest,
+              delivery checks, review reading, form interaction, quantity changes, repeated visits, and page dwell.
+              Sensitive uploads, such as skin or body photos, should be explicit and optional.
             </p>
           </div>
           <div class="example-grid">
             <div class="example">
-              <code>size</code>
-              <div><strong>Repeated size events</strong><span>Hover XS, click M, open Size Guide. Trigger fit help only inside this area.</span></div>
+              <code>page</code>
+              <div><strong>Behavior stream</strong><span>Capture where the shopper slows down, compares, opens panels, clicks options, and returns.</span></div>
             </div>
             <div class="example">
-              <code>try-on</code>
-              <div><strong>Image focus</strong><span>Hover or click product images. Ask if they want to see the item on themselves.</span></div>
+              <code>media</code>
+              <div><strong>Visual attention</strong><span>Image focus can trigger sneaker-on-foot, apparel try-on, color matching, or product detail help.</span></div>
             </div>
             <div class="example">
-              <code>ship</code>
-              <div><strong>Delivery uncertainty</strong><span>Prompt for pincode when the shopper checks delivery or returns.</span></div>
+              <code>input</code>
+              <div><strong>Optional context</strong><span>Ask for a skin close-up, foot photo, room image, or preference quiz only when it improves the answer.</span></div>
             </div>
             <div class="example">
               <code>time</code>
-              <div><strong>30-second product dwell</strong><span>If the shopper stays, offer a light discount nudge with XYZ10.</span></div>
+              <div><strong>Dwell and return</strong><span>If the shopper stays, returns, or hesitates before checkout, move from education to decision support.</span></div>
             </div>
             <div class="example">
-              <code>qty</code>
-              <div><strong>Quantity change</strong><span>If they move to two pieces, offer a second-item discount.</span></div>
+              <code>cart</code>
+              <div><strong>Commercial moment</strong><span>Quantity changes, cart pauses, and checkout exits can trigger bundles, offers, or reassurance.</span></div>
             </div>
           </div>
         </section>
 
         <section class="tab-panel" id="tab-interventions" role="tabpanel" aria-labelledby="tab-button-interventions" hidden>
           <div>
-            <h2>Each intervention belongs to one zone.</h2>
+            <h2>Each intervention belongs to one uncertainty.</h2>
             <p>
               The assistant should feel like a retail associate who knows when to speak softly. It should not interrupt
-              every click, image view, or scroll. The message must match the part of the page the shopper is using.
+              every click, image view, or scroll. The message must match the shopper's current uncertainty, and include
+              caution where the answer may be wrong or subjective.
             </p>
           </div>
           <div class="example-grid">
             <div class="example">
               <code>fit</code>
-              <div><strong>"Need fit help?"</strong><span>Appears only after repeated behavior around size selectors or the size guide.</span></div>
+              <div><strong>"Need fit help?"</strong><span>For apparel or sneakers, appears after repeated size behavior or fit-guide activity.</span></div>
+            </div>
+            <div class="example">
+              <code>skin</code>
+              <div><strong>"Want skin-context help?"</strong><span>For skincare, asks for an optional close-up and warns that analysis can be imperfect.</span></div>
             </div>
             <div class="example">
               <code>try-on</code>
-              <div><strong>"Want to see it on yourself?"</strong><span>Appears around product images, then opens upload-based try-on.</span></div>
+              <div><strong>"See it on you?"</strong><span>For sneakers, eyewear, apparel, or accessories, opens a visual preview or upload flow.</span></div>
+            </div>
+            <div class="example">
+              <code>match</code>
+              <div><strong>"Compare ingredients or materials?"</strong><span>Summarizes formulas, specs, reviews, compatibility, and tradeoffs.</span></div>
             </div>
             <div class="example">
               <code>offer</code>
-              <div><strong>"Take XYZ10 for 10% off."</strong><span>Appears after 30 seconds on the page, then Space adds the product to bag.</span></div>
-            </div>
-            <div class="example">
-              <code>ship</code>
-              <div><strong>"Check delivery timing?"</strong><span>Appears around delivery/returns and asks for pincode.</span></div>
-            </div>
-            <div class="example">
-              <code>review</code>
-              <div><strong>"Want the review pattern?"</strong><span>Summarizes common fit complaints and quality signals.</span></div>
+              <div><strong>"Ready for a small nudge?"</strong><span>Uses dwell, cart state, and purchase readiness to suggest an offer or bundle.</span></div>
             </div>
           </div>
         </section>
@@ -669,60 +693,71 @@
             <h2>Scope it as a sequence of buying moments.</h2>
             <p>
               The first version should prove that the assistant can wait, notice, and intervene with the right action.
-              From there, expand by adding one more shopper uncertainty at a time.
+              Start with apparel because it is easy to demo, then expand by adding one more product-category
+              uncertainty at a time.
             </p>
           </div>
           <div class="example-grid">
             <div class="example">
               <code>V1</code>
-              <div><strong>Size help</strong><span>Repeated size-area behavior opens fit guidance through the assistant drawer.</span></div>
+              <div><strong>Journey data layer</strong><span>Collect lightweight page events and map them into shopper intent states.</span></div>
             </div>
             <div class="example">
               <code>V1</code>
-              <div><strong>Try-on prompt</strong><span>Product image attention opens a local upload preview for virtual try-on.</span></div>
+              <div><strong>Decision layer</strong><span>Decide whether to stay quiet, educate, summarize, ask for context, or push toward checkout.</span></div>
             </div>
             <div class="example">
               <code>V1</code>
-              <div><strong>Discount after dwell</strong><span>30 seconds on the product page triggers XYZ10 and Space adds to bag.</span></div>
+              <div><strong>Apparel demo</strong><span>Repeated size-area behavior opens fit guidance through the assistant drawer.</span></div>
             </div>
             <div class="example">
               <code>V2</code>
-              <div><strong>Delivery, review, quantity</strong><span>Add pincode timing, review summaries, and second-item upsell prompts.</span></div>
+              <div><strong>Category expansion</strong><span>Add skincare analysis, sneaker try-on, review summaries, bundles, and delivery reassurance.</span></div>
             </div>
           </div>
         </section>
       </section>
 
-      <section class="playbook" id="examples">
+      <section class="section-intro" id="features">
+        <p class="section-kicker">Feature set</p>
+        <h2 class="section-title">What Cursor Commerce can do</h2>
+        <p>
+          The system watches the journey, understands the likely uncertainty, and chooses the lightest useful response.
+          The apparel page is the demo, but the same pattern works across categories where shoppers need confidence
+          before buying.
+        </p>
+      </section>
+
+      <section class="playbook" aria-label="Cursor Commerce feature set">
         <article class="play-card">
-          <b>Example 01</b>
-          <h3>Size hesitation</h3>
-          <p>The shopper hovers sizes, clicks M, returns to Size Guide, and pauses. The assistant types "Need fit help?" near the cursor.</p>
+          <b>Feature 01</b>
+          <h3>Journey sensing</h3>
+          <p>Collect page-level signals across hovers, clicks, uploads, reviews, delivery checks, dwell time, cart changes, and repeat visits.</p>
         </article>
         <article class="play-card">
-          <b>Example 02</b>
-          <h3>Product dwell</h3>
-          <p>The shopper spends 30 seconds on the PDP. The assistant offers XYZ10 and lets Space add the item to bag.</p>
+          <b>Feature 02</b>
+          <h3>Intent decisioning</h3>
+          <p>Decide whether the shopper needs help, what kind of help fits the moment, and whether the assistant should stay quiet.</p>
         </article>
         <article class="play-card">
-          <b>Example 03</b>
-          <h3>Virtual try-on</h3>
-          <p>The shopper studies product images. The assistant asks if they want to see it on themselves and opens an upload panel.</p>
+          <b>Feature 03</b>
+          <h3>Visual previews</h3>
+          <p>Offer sneaker-on-foot, apparel try-on, accessory preview, shade matching, or room/product visualization from image attention.</p>
         </article>
         <article class="play-card">
-          <b>Example 04</b>
-          <h3>Delivery timing</h3>
-          <p>The shopper checks delivery or returns. The assistant asks for pincode and estimates when the product will arrive.</p>
+          <b>Feature 04</b>
+          <h3>Guided analysis</h3>
+          <p>For skincare, ask for optional skin context or a close-up image, then answer with clear uncertainty and non-medical warnings.</p>
         </article>
         <article class="play-card">
-          <b>Example 05</b>
-          <h3>Review summary</h3>
-          <p>The shopper lingers near reviews. The assistant summarizes the pattern: bust fits snug, straps feel secure, built-in support is liked.</p>
+          <b>Feature 05</b>
+          <h3>Confidence summaries</h3>
+          <p>Summarize reviews, ingredients, materials, fit notes, return policies, and delivery timing when the shopper studies those areas.</p>
         </article>
         <article class="play-card">
-          <b>Example 06</b>
-          <h3>Quantity upsell</h3>
-          <p>The shopper increases quantity. The assistant offers a small second-piece discount to move the basket value up.</p>
+          <b>Feature 06</b>
+          <h3>Checkout nudges</h3>
+          <p>Use dwell, cart state, quantity changes, and purchase readiness to suggest an offer, bundle, or reassurance at the right time.</p>
         </article>
       </section>
 
@@ -730,11 +765,12 @@
         <div>
           <h2>View it in action on the product page.</h2>
           <p>
-            Try the two live behaviors: interact around the size selector a few times for fit help, then reload and stay
-            on the page for 30 seconds to see the discount prompt.
+            The current demo uses an apparel product to prove the interaction pattern: collect customer-journey signals,
+            infer hesitation, then respond near the cursor. The same architecture can support skincare, sneakers,
+            accessories, electronics, or any page where shoppers need contextual confidence.
           </p>
         </div>
-        <a class="button" href="./demo-apparel-page.html">Open PDP Demo</a>
+        <a class="button" href="./demo-apparel-page.html">Open Apparel Demo</a>
       </section>
     </main>
 

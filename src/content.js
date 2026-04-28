@@ -18,7 +18,8 @@
     typed: "",
     typingText: "",
     typingIndex: 0,
-    drawerOpen: false
+    drawerOpen: false,
+    uploadedTryOnImage: null
   };
 
   const prompts = {
@@ -310,13 +311,14 @@
       <label class="hfa-upload">
         <input type="file" accept="image/*" />
         <span>Upload your photo</span>
-        <small>Prototype preview only. The image stays local in this demo.</small>
+        <small>AI preview only. It can be inaccurate, and it is not sizing or body advice.</small>
       </label>
+      <button class="hfa-generate" type="button" disabled>Generate AI try-on</button>
       <div class="hfa-preview">
         <span>Your preview appears here.</span>
       </div>
       <div class="hfa-chat" aria-live="polite">
-        <div class="hfa-message hfa-ai">Upload a straight-on photo, then ask if the color, neckline, or sleeve length works for you.</div>
+        <div class="hfa-message hfa-ai">Upload a clear photo, then generate a Nano Banana preview. Treat it as a rough visual mockup, not a promise of exact fit.</div>
       </div>
       <form class="hfa-chat-form">
         <input name="message" placeholder="Ask about color, style, or fit" autocomplete="off" />
@@ -342,14 +344,132 @@
     upload?.addEventListener("change", () => {
       const file = upload.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
+      if (!/^image\//.test(file.type)) {
+        addChatMessage(drawer, "Please upload an image file for the try-on preview.", "ai");
+        return;
+      }
+      resizeImageFile(file)
+        .then((image) => {
+        state.uploadedTryOnImage = {
+          dataUrl: image.dataUrl,
+          mimeType: image.mimeType
+        };
         const preview = drawer.querySelector(".hfa-preview");
-        preview.innerHTML = `<img src="${reader.result}" alt="Uploaded photo preview" />`;
-        addChatMessage(drawer, "Photo loaded locally. A real try-on model would generate the outfit preview from here.", "ai");
+        const generateButton = drawer.querySelector(".hfa-generate");
+        preview.innerHTML = `<img src="${image.dataUrl}" alt="Uploaded photo preview" />`;
+        if (generateButton) generateButton.disabled = false;
+        addChatMessage(drawer, "Photo loaded. Press Generate AI try-on to create the preview.", "ai");
+        })
+        .catch(() => addChatMessage(drawer, "Could not read that image. Try a JPEG, PNG, or WebP photo.", "ai"));
+    });
+
+    drawer.querySelector(".hfa-generate")?.addEventListener("click", () => generateTryOn(drawer));
+  }
+
+  async function generateTryOn(drawer) {
+    if (!state.uploadedTryOnImage?.dataUrl) {
+      addChatMessage(drawer, "Upload your photo first, then I can generate the try-on preview.", "ai");
+      return;
+    }
+
+    const generateButton = drawer.querySelector(".hfa-generate");
+    const preview = drawer.querySelector(".hfa-preview");
+    if (generateButton) {
+      generateButton.disabled = true;
+      generateButton.textContent = "Generating...";
+    }
+    preview.innerHTML = `<span>Generating AI try-on preview...</span>`;
+
+    try {
+      const productImage = await getCurrentProductImagePart();
+      const response = await fetch("/api/try-on", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          productTitle: state.product?.title || extractProductContext().title,
+          userImage: dataUrlToImagePart(state.uploadedTryOnImage.dataUrl, state.uploadedTryOnImage.mimeType),
+          productImage
+        })
+      });
+
+      const isJsonResponse = (response.headers.get("content-type") || "").includes("application/json");
+      const result = isJsonResponse ? await response.json().catch(() => ({})) : {};
+      if (!response.ok || !result.image) {
+        if (!isJsonResponse && (response.status === 404 || response.status === 405 || response.status === 501)) {
+          throw new Error("The local static server cannot run the try-on API. Start this project with `node local-dev-server.js`, then reload the page.");
+        }
+        throw new Error(result.error || "Gemini did not return an image. Try a clearer photo or a simpler product angle.");
+      }
+
+      preview.innerHTML = `<img src="${result.image}" alt="Generated AI try-on preview" />`;
+      addChatMessage(drawer, "Generated a rough VTON preview with the tank applied to your photo. It may be wrong around edges, proportions, fabric, or fit.", "ai");
+    } catch (error) {
+      preview.innerHTML = `<span>Could not generate the preview.</span>`;
+      addChatMessage(drawer, error instanceof Error ? error.message : "Try-on generation failed.", "ai");
+    } finally {
+      if (generateButton) {
+        generateButton.disabled = false;
+        generateButton.textContent = "Generate AI try-on";
+      }
+    }
+  }
+
+  async function getCurrentProductImagePart() {
+    const image = document.querySelector("[data-main-product-image]") || document.querySelector("[data-product-main-trigger] img");
+    if (!image?.src) throw new Error("Could not find the product image.");
+    const response = await fetch(image.src);
+    if (!response.ok) throw new Error("Could not load the product image for try-on.");
+    const blob = await response.blob();
+    const dataUrl = await blobToDataUrl(blob);
+    return dataUrlToImagePart(dataUrl, blob.type || "image/webp");
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Could not read image file."));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function resizeImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read image file."));
+      reader.onload = () => {
+        const image = new Image();
+        image.onerror = () => reject(new Error("Could not load image file."));
+        image.onload = () => {
+          const maxSide = 1200;
+          const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+          const width = Math.max(1, Math.round(image.width * scale));
+          const height = Math.max(1, Math.round(image.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const context = canvas.getContext("2d");
+          context.drawImage(image, 0, 0, width, height);
+          resolve({
+            dataUrl: canvas.toDataURL("image/jpeg", 0.86),
+            mimeType: "image/jpeg"
+          });
+        };
+        image.src = String(reader.result || "");
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  function dataUrlToImagePart(dataUrl, fallbackMimeType = "image/jpeg") {
+    const match = String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) throw new Error("Image data was not in a supported format.");
+    return {
+      mimeType: match[1] || fallbackMimeType,
+      data: match[2]
+    };
   }
 
   function addChatMessage(drawer, text, role) {
