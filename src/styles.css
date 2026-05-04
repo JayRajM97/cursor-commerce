@@ -182,6 +182,10 @@
   display: none;
 }
 
+.hfa-mobile-bar {
+  display: none;
+}
+
 #hfa-root[data-drawer-open="true"] .hfa-floater {
   right: 408px;
 }
@@ -387,7 +391,64 @@
 }
 
 @media (max-width: 700px) {
+  .hfa-companion,
+  .hfa-floater {
+    display: none;
+  }
+
+  .hfa-mobile-bar {
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    bottom: 0;
+    box-shadow: 0 -12px 34px rgba(0, 0, 0, 0.12);
+    color: #111111;
+    cursor: pointer;
+    display: block;
+    font: inherit;
+    left: 0;
+    padding: 12px 44px calc(12px + env(safe-area-inset-bottom)) 14px;
+    position: fixed;
+    right: 0;
+    text-align: left;
+    z-index: 4;
+  }
+
+  .hfa-mobile-bar[hidden] {
+    display: none;
+  }
+
+  .hfa-mobile-bar::after {
+    color: #777777;
+    content: "Tap";
+    font-size: 12px;
+    font-weight: 850;
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .hfa-mobile-bar strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 3px;
+  }
+
+  .hfa-mobile-bar span {
+    color: #555555;
+    display: block;
+    font-size: 13px;
+    line-height: 1.28;
+  }
+
+  #hfa-root[data-drawer-open="true"] .hfa-mobile-bar {
+    display: none;
+  }
+
   .hfa-drawer {
+    bottom: 0;
     left: 0;
     width: auto;
   }

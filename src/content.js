@@ -9,6 +9,9 @@
     sizeSignals: 0,
     lastSizeSignalAt: 0,
     currentHoverType: "other",
+    mobileActiveMode: null,
+    mobileScrollTimer: null,
+    mobileCouponTimer: null,
     sizeHoverTimer: null,
     imageHoverTimer: null,
     dwellTimer: null,
@@ -36,6 +39,29 @@
     quantity: "Press Space to add one more",
     delivery: "Press Space to check",
     discount: "Press Space to add to bag"
+  };
+
+  const mobileNudges = {
+    tryon: {
+      label: "Want to see it on yourself?",
+      copy: "Upload a photo for a quick AI try-on preview."
+    },
+    fit: {
+      label: "Unsure about size?",
+      copy: "Get a quick fit recommendation before adding to bag."
+    },
+    delivery: {
+      label: "Need delivery timing?",
+      copy: "Enter your pincode and check arrival before checkout."
+    },
+    quantity: {
+      label: "Adding more than one?",
+      copy: "Unlock 5% off the second piece."
+    },
+    discount: {
+      label: "Coupon unlocked",
+      copy: "Use XYZ10 for 10% off at checkout."
+    }
   };
 
   function cleanText(value) {
@@ -149,6 +175,10 @@
         <button class="hfa-close" type="button" aria-label="Dismiss">×</button>
       </div>
       <div class="hfa-cart-toast" hidden></div>
+      <button class="hfa-mobile-bar" type="button" aria-label="Shopping nudge" hidden>
+        <strong></strong>
+        <span></span>
+      </button>
       <aside class="hfa-drawer" aria-label="Shopping assistant" hidden></aside>
     `;
     document.documentElement.appendChild(root);
@@ -167,6 +197,9 @@
     root.querySelector(".hfa-close")?.addEventListener("click", (event) => {
       event.stopPropagation();
       hidePrompt();
+    });
+    root.querySelector(".hfa-mobile-bar")?.addEventListener("click", () => {
+      handleMobileNudge(state.mobileActiveMode);
     });
     return root;
   }
@@ -270,6 +303,7 @@
     const drawer = ensureRoot().querySelector(".hfa-drawer");
     if (drawer) drawer.hidden = true;
     setDrawerState(false);
+    evaluateMobileNudge();
   }
 
   function fitMarkup(product) {
@@ -571,6 +605,9 @@
         state.quantityPrompted = true;
         showTypewriter("quantity");
       }
+      if (isMobileViewport() && Number(event.detail?.quantity || 1) >= 2) {
+        showMobileNudge("quantity");
+      }
     });
 
     document.addEventListener("keydown", (event) => {
@@ -586,6 +623,19 @@
         handlePromptAction();
       }
     });
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!isMobileViewport() || state.drawerOpen) return;
+        clearTimeout(state.mobileScrollTimer);
+        state.mobileScrollTimer = setTimeout(evaluateMobileNudge, 90);
+      },
+      { passive: true }
+    );
+
+    window.addEventListener("resize", evaluateMobileNudge);
+    evaluateMobileNudge();
   }
 
   function handlePromptAction() {
@@ -610,6 +660,86 @@
     if (state.lastPrompt === "fit") {
       openDrawer("fit");
     }
+  }
+
+  function handleMobileNudge(mode) {
+    hideMobileNudge();
+    if (mode === "fit") {
+      openDrawer("fit");
+      return;
+    }
+    if (mode === "tryon") {
+      openDrawer("tryon");
+      return;
+    }
+    if (mode === "delivery") {
+      openDeliveryPanel();
+      showCartToast("Enter your pincode to check delivery timing.");
+      return;
+    }
+    if (mode === "quantity") {
+      incrementQuantity();
+      showCartToast("Second piece added. Extra 5% applies to the second item.");
+      return;
+    }
+    if (mode === "discount") {
+      showTypewriter("discount");
+      showCartToast("Coupon ready: XYZ10");
+    }
+  }
+
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  function showMobileNudge(mode) {
+    if (!isMobileViewport() || state.drawerOpen || !mobileNudges[mode]) return;
+    const bar = ensureRoot().querySelector(".hfa-mobile-bar");
+    state.mobileActiveMode = mode;
+    bar.querySelector("strong").textContent = mobileNudges[mode].label;
+    bar.querySelector("span").textContent = mobileNudges[mode].copy;
+    bar.dataset.mode = mode;
+    bar.hidden = false;
+  }
+
+  function hideMobileNudge() {
+    const bar = ensureRoot().querySelector(".hfa-mobile-bar");
+    if (bar) bar.hidden = true;
+    state.mobileActiveMode = null;
+  }
+
+  function evaluateMobileNudge() {
+    if (!isMobileViewport() || state.drawerOpen) {
+      hideMobileNudge();
+      return;
+    }
+
+    const viewportCenter = window.innerHeight * 0.56;
+    const candidates = [
+      { mode: "tryon", selector: ".gallery, [data-product-gallery], [data-product-main-trigger]" },
+      { mode: "fit", selector: ".sizes, .size-guide" },
+      { mode: "quantity", selector: ".quantity-row, .add" },
+      { mode: "delivery", selector: ".delivery-check" }
+    ];
+
+    const match = candidates.find((candidate) => {
+      const element = document.querySelector(candidate.selector);
+      if (!element) return false;
+      const rect = element.getBoundingClientRect();
+      return rect.top < viewportCenter && rect.bottom > 86;
+    });
+
+    if (match) {
+      showMobileNudge(match.mode);
+      return;
+    }
+
+    if (window.scrollY > window.innerHeight * 0.85) {
+      showMobileNudge("discount");
+      return;
+    }
+
+    hideMobileNudge();
   }
 
   function addToBagWithDiscount() {

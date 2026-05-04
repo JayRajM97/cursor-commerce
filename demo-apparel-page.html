@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gymshark PDP Demo</title>
-    <link rel="stylesheet" href="./src/styles.css?v=tryon-5" />
+    <link rel="stylesheet" href="./src/styles.css?v=mweb-2" />
     <style>
       :root {
         --border: #dfdfdf;
@@ -445,13 +445,28 @@
       }
 
       @media (max-width: 640px) {
+        body {
+          background: #f7f6f2;
+        }
+
         .site-header {
+          background: rgba(255, 255, 255, 0.96);
           height: 58px;
           padding: 0 16px;
         }
 
+        .site-logo span {
+          font-size: 13px;
+        }
+
+        .thesis-link {
+          font-size: 11px;
+          padding: 8px 10px;
+        }
+
         .pdp {
-          padding: 8px 0 40px;
+          gap: 0;
+          padding: 0 0 92px;
         }
 
         .gallery {
@@ -459,11 +474,33 @@
         }
 
         .product-shot {
-          height: 520px;
+          height: min(78vh, 620px);
+        }
+
+        .carousel-thumbs {
+          gap: 6px;
+          padding: 6px;
+        }
+
+        .carousel-thumb {
+          height: 86px;
         }
 
         .details {
+          background: #ffffff;
           padding: 18px;
+        }
+
+        h1 {
+          font-size: 19px;
+        }
+
+        .swatches {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .sizes {
+          grid-template-columns: repeat(3, 1fr);
         }
       }
     </style>
@@ -644,6 +681,6 @@
           : "Enter a pincode to see delivery timing.";
       });
     </script>
-    <script src="./src/content.js?v=tryon-5"></script>
+    <script src="./src/content.js?v=mweb-2"></script>
   </body>
 </html>
