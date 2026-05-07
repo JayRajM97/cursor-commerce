@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
+const transcribeHandler = require("./api/transcribe.js");
 const tryOnHandler = require("./api/try-on.js");
 
 const ROOT = __dirname;
@@ -55,7 +56,9 @@ function readRequestBody(request) {
 
 function serveStatic(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
-  const pathname = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+  let pathname = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+  if (pathname.startsWith("/product/")) pathname = "/product.html";
+  if (pathname === "/marketplace") pathname = "/marketplace.html";
   const filePath = path.resolve(ROOT, `.${pathname}`);
 
   if (!filePath.startsWith(ROOT)) {
@@ -84,6 +87,17 @@ http
       try {
         request.body = await readRequestBody(request);
         await tryOnHandler(request, response);
+      } catch (error) {
+        response.writeHead(400, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : "Bad request" }));
+      }
+      return;
+    }
+
+    if (request.url?.startsWith("/api/transcribe")) {
+      try {
+        request.body = await readRequestBody(request);
+        await transcribeHandler(request, response);
       } catch (error) {
         response.writeHead(400, { "Content-Type": "application/json" });
         response.end(JSON.stringify({ error: error instanceof Error ? error.message : "Bad request" }));

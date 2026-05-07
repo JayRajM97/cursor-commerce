@@ -11,7 +11,7 @@ A working prototype for cursor-native commerce assistance. It watches customer j
    ```
 
 2. Open `http://localhost:8000/thesis.html` for the thesis.
-3. Open `http://localhost:8000/demo-apparel-page.html` for the demo.
+3. Open `http://localhost:8000/demo-apparel-page.html` for the apparel demo, or `http://localhost:8000/marketplace.html` for the CSV-generated catalog.
 4. Hover over the size buttons for a couple of seconds, or click the product image.
 
 The assistant should appear near your cursor with prompts like “Need fit help?” or “Want to see it on yourself?”
@@ -46,7 +46,21 @@ node local-dev-server.js
 
 Open `http://localhost:8000/demo-apparel-page.html`. This server serves the static demo and runs `/api/try-on`.
 
+## CSV Catalog Prototype
+
+Phase one of the voice-commerce concept lives at `marketplace.html`.
+
+- Source CSVs: SHEIN and Walmart product exports from the local Downloads folder.
+- Generated catalog: `data/products.json`.
+- Build command: `node scripts/build-catalog.js`.
+- Product detail routes: `/product/:id`, backed by `product.html`.
+
+The current catalog prioritizes SHEIN crystal/home decor products, with Walmart products included as review-rich support categories.
+
 For production, add `GEMINI_API_KEY` in the Vercel project environment variables, then redeploy.
+
+For voice transcription, add `OPENAI_API_KEY` for the most reliable demo path. The local transcribe endpoint uses
+`gpt-4o-mini-transcribe` by default and falls back to Gemini only when `OPENAI_API_KEY` is not present.
 
 ## What V1 does
 

@@ -4,6 +4,14 @@
     {
       "source": "/",
       "destination": "/thesis.html"
+    },
+    {
+      "source": "/marketplace",
+      "destination": "/marketplace.html"
+    },
+    {
+      "source": "/product/:id",
+      "destination": "/product.html"
     }
   ]
 }

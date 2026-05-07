@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cursor Commerce Product</title>
+    <link rel="stylesheet" href="/src/marketplace.css" />
+  </head>
+  <body data-page="product">
+    <header class="market-header">
+      <a class="market-logo" href="/marketplace.html" aria-label="Cursor Commerce marketplace">
+        <span class="market-logo-mark">CC</span>
+        <span>Cursor Commerce</span>
+      </a>
+      <label class="market-search">
+        <span>Search</span>
+        <input id="searchInput" type="search" placeholder="Search this generated catalog..." />
+      </label>
+      <nav class="market-nav" aria-label="Primary">
+        <a class="market-link" href="/marketplace.html">Catalog</a>
+        <a class="market-link" href="/thesis.html">Thesis</a>
+      </nav>
+    </header>
+
+    <main class="market-shell">
+      <section class="detail-layout" id="productDetail"></section>
+      <section class="related-section" aria-labelledby="relatedTitle">
+        <h2 id="relatedTitle">Related products</h2>
+        <div class="product-grid" id="relatedGrid"></div>
+      </section>
+    </main>
+
+    <script src="/src/marketplace.js"></script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cursor Commerce Marketplace</title>
+    <link rel="stylesheet" href="/src/marketplace.css" />
+  </head>
+  <body data-page="marketplace">
+    <header class="market-header">
+      <a class="market-logo" href="/marketplace.html" aria-label="Cursor Commerce marketplace">
+        <span class="market-logo-mark">CC</span>
+        <span>Cursor Commerce</span>
+      </a>
+      <label class="market-search">
+        <span>Search</span>
+        <input id="searchInput" type="search" placeholder="Try desk crystal, blue decor, candles, shoes..." />
+      </label>
+      <nav class="market-nav" aria-label="Primary">
+        <a class="market-link" href="/thesis.html">Thesis</a>
+      </nav>
+    </header>
+
+    <main class="market-shell">
+      <section class="market-hero">
+        <div>
+          <p class="market-kicker">CSV-generated storefront</p>
+          <h1>Raw product data, turned into a live shopping surface.</h1>
+          <p class="market-hero-copy">
+            Phase one converts the SHEIN and Walmart CSVs into a curated marketplace. The first demo
+            leans into SHEIN crystals and home decor, then uses Walmart for review-rich support categories.
+          </p>
+        </div>
+        <aside class="market-panel">
+          <strong>The concierge layer will sit on top of this catalog.</strong>
+          <p>
+            Product opens, saves, color switches, and long dwell time become signals for what the agent
+            should ask or recommend next.
+          </p>
+          <div class="signal-list">
+            <span>Opened yellow crystal -> ask desk, shelf, or gifting</span>
+            <span>Desk intent -> ask room and surface color</span>
+            <span>Dark wood + white room -> suggest jade, blue, or selenite</span>
+          </div>
+        </aside>
+      </section>
+
+      <div class="filter-row" id="filterRow" aria-label="Product filters"></div>
+
+      <section aria-labelledby="catalogTitle">
+        <div class="catalog-meta">
+          <h2 id="catalogTitle">Curated products</h2>
+          <span class="catalog-count" id="catalogCount">Loading catalog...</span>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </section>
+    </main>
+
+    <script src="/src/marketplace.js"></script>
+  </body>
+</html>
