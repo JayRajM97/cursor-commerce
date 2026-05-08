@@ -6,6 +6,7 @@ const state = {
   conciergeResults: null,
   pendingClarification: null,
   chatHistory: [],
+  lastIntent: null,
   voice: {
     recognition: null,
     recorder: null,
@@ -344,7 +345,7 @@ function initConcierge() {
       <button class="concierge-submit" type="submit">Ask</button>
     </form>
     <div class="concierge-voice-status" id="conciergeVoiceStatus" aria-live="polite"></div>
-    <div class="concierge-reply" id="conciergeReply" aria-live="polite"></div>
+    <div class="concierge-thread" id="conciergeThread" aria-live="polite"></div>
     <div class="concierge-dynamic-card" id="conciergeDynamicCard"></div>
   `;
   document.body.appendChild(widget);
@@ -360,7 +361,7 @@ function initConcierge() {
     const query = input.value.trim();
     if (!query) return;
     input.value = "";
-    showConciergeSayLoading();
+    showConciergeSayLoading(query);
     const action = await runConcierge(query, { speak: false, syncUrl: true });
     renderConciergeReply(action);
   });
@@ -443,6 +444,7 @@ function initVoiceControls() {
     event.preventDefault();
     if (event.repeat) return;
     openConciergeWidget();
+    state.voice.keepAlive = true;
     startVoice();
   });
   window.addEventListener("keyup", (event) => {
@@ -680,7 +682,7 @@ async function submitVoiceQuery(query) {
   if (input) input.value = "";
   const status = document.querySelector("#conciergeVoiceStatus");
 
-  showConciergeSayLoading();
+  showConciergeSayLoading(query);
   if (status) status.textContent = "Thinking...";
 
   try {
@@ -852,6 +854,16 @@ async function runConcierge(query, options = {}) {
   }
 
   const intent = parseConciergeIntent(effectiveQuery);
+  // Carry category + useCase from last query when new query doesn't restate them
+  if (state.lastIntent) {
+    if (!intent.categoryFilter && state.lastIntent.categoryFilter) {
+      intent.categoryFilter = state.lastIntent.categoryFilter;
+      intent.categoryLabel = state.lastIntent.categoryLabel;
+    }
+    if (!intent.useCase && state.lastIntent.useCase) {
+      intent.useCase = state.lastIntent.useCase;
+    }
+  }
   // Resolve "this / it" to the top concierge result when no explicit product open
   const refersToThis = /\b(this|it)\b/i.test(effectiveQuery);
   const baseProduct = state.currentProduct || (refersToThis && state.conciergeResults?.products?.[0]) || null;
@@ -881,6 +893,7 @@ async function runConcierge(query, options = {}) {
   state.chatHistory.push({ role: "assistant", content: say });
   if (state.chatHistory.length > 20) state.chatHistory = state.chatHistory.slice(-20);
 
+  state.lastIntent = intent;
   state.conciergeResults = { query, intent, products, pageTitle, say };
   remember("lastIntent", intent.intent || query);
   if (intent.useCase) remember("useCase", intent.useCase);
@@ -1032,15 +1045,26 @@ async function fetchConciergeSay(intent, product, products, rawQuery, voiceMode 
   return `${products.length} picks for "${rawQuery}" — ${firstName} is the best match.`;
 }
 
-function showConciergeSayLoading() {
-  const reply = document.querySelector("#conciergeReply");
-  if (!reply) return;
-  reply.innerHTML = `<p class="concierge-thinking"><span></span><span></span><span></span></p>`;
+function showConciergeSayLoading(query = null) {
+  const thread = document.querySelector("#conciergeThread");
+  if (!thread) return;
+  if (query) {
+    const userEl = document.createElement("div");
+    userEl.className = "cc-thread-user";
+    userEl.textContent = query;
+    thread.appendChild(userEl);
+  }
+  const thinkEl = document.createElement("div");
+  thinkEl.className = "cc-thread-ai cc-thread-thinking";
+  thinkEl.innerHTML = `<p class="concierge-thinking"><span></span><span></span><span></span></p>`;
+  thread.appendChild(thinkEl);
+  thread.scrollTop = thread.scrollHeight;
 }
 
 function renderConciergeReply(action) {
-  const reply = document.querySelector("#conciergeReply");
-  if (!reply) return;
+  const thread = document.querySelector("#conciergeThread");
+  if (!thread) return;
+  thread.querySelector(".cc-thread-thinking")?.remove();
   const picks = (action.products || []).slice(0, 5);
   const cardsHtml = picks.length
     ? `<div class="cc-reply-cards">${picks
@@ -1056,11 +1080,11 @@ function renderConciergeReply(action) {
         )
         .join("")}</div>`
     : "";
-  reply.innerHTML = `
-    <strong>${escapeHtml(action.pageTitle)}</strong>
-    <p>${escapeHtml(action.say)}</p>
-    ${cardsHtml}
-  `;
+  const aiEl = document.createElement("div");
+  aiEl.className = "cc-thread-ai";
+  aiEl.innerHTML = `<p>${escapeHtml(action.say)}</p>${cardsHtml}`;
+  thread.appendChild(aiEl);
+  thread.scrollTop = thread.scrollHeight;
 }
 
 function renderFloatingDynamicCard() {
