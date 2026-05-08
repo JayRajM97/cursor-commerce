@@ -684,6 +684,7 @@ input {
 }
 
 .concierge-reply {
+  overflow: hidden;
   padding: 13px 14px;
 }
 

@@ -87,7 +87,7 @@ function buildSystemPrompt(product, signals, catalogContext) {
 
   // Marketplace narration mode: short, specific, natural
   if (catalogContext) {
-    const { query, topProducts, totalCount } = catalogContext;
+    const { query, topProducts, totalCount, followUp } = catalogContext;
     const count = totalCount || topProducts?.length || 0;
     const list = (topProducts || [])
       .slice(0, 4)
@@ -103,7 +103,8 @@ function buildSystemPrompt(product, signals, catalogContext) {
       `Shopper asked: "${query}". You found ${count} product${count !== 1 ? "s" : ""}.`,
       list ? `Top matches: ${list}.` : "",
       "Write exactly ONE natural, specific sentence (max 20 words) telling the shopper what you found.",
-      "Name a standout product or key attribute. Never say 'signals', 'options', 'nearby', or 'matching'. Sound like a knowledgeable friend who just looked through the shelf."
+      "Name a standout product or key attribute. Never say 'signals', 'options', 'nearby', or 'matching'. Sound like a knowledgeable friend who just looked through the shelf.",
+      followUp ? "Then add one short follow-up question (max 8 words) to help them narrow further." : ""
     ]
       .filter(Boolean)
       .join(" ");

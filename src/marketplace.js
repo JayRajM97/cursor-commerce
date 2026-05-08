@@ -5,6 +5,7 @@ const state = {
   currentProduct: null,
   conciergeResults: null,
   pendingClarification: null,
+  chatHistory: [],
   voice: {
     recognition: null,
     recorder: null,
@@ -149,8 +150,6 @@ function renderProducts() {
       ? `${products.length} concierge picks`
       : `${products.length} of ${state.catalog.products.length} products`;
   }
-
-  renderFloatingDynamicCard();
 
   if (!products.length) {
     grid.innerHTML = `<div class="empty-state">No products match this view yet.</div>`;
@@ -557,6 +556,7 @@ function stopAudioRecording() {
     state.voice.recorder.stop();
   } else {
     stopVoiceUi();
+    restartContinuousVoice();
   }
 }
 
@@ -683,14 +683,18 @@ async function submitVoiceQuery(query) {
   showConciergeSayLoading();
   if (status) status.textContent = "Thinking...";
 
-  const action = await runConcierge(query, { speak: false, syncUrl: true });
-  renderConciergeReply(action);
-
-  if (action.say) {
-    if (status) status.textContent = "Speaking...";
-    await speakConcierge(action.say);
+  try {
+    const action = await runConcierge(query, { speak: false, syncUrl: true });
+    renderConciergeReply(action);
+    if (action.say) {
+      if (status) status.textContent = "Speaking...";
+      await speakConcierge(action.say);
+    }
+  } catch {
+    if (status) status.textContent = "Couldn't get a reply — try again.";
   }
 
+  // Restart always runs — error must not kill the live session
   if (state.voice.keepAlive) {
     const btn = document.querySelector("#conciergeVoice");
     btn?.classList.add("is-live");
@@ -848,7 +852,9 @@ async function runConcierge(query, options = {}) {
   }
 
   const intent = parseConciergeIntent(effectiveQuery);
-  const baseProduct = state.currentProduct;
+  // Resolve "this / it" to the top concierge result when no explicit product open
+  const refersToThis = /\b(this|it)\b/i.test(effectiveQuery);
+  const baseProduct = state.currentProduct || (refersToThis && state.conciergeResults?.products?.[0]) || null;
 
   // Ask one clarifying question before showing products for vague browse requests
   if (!answeredClarification && shouldAskClarification(intent)) {
@@ -856,6 +862,9 @@ async function runConcierge(query, options = {}) {
     const question = await fetchClarifyingQuestion(effectiveQuery, baseProduct);
     const result = { say: question, products: [], pageTitle: "One quick question" };
     state.conciergeResults = { query: effectiveQuery, intent, products: [], pageTitle: result.pageTitle, say: question };
+    state.chatHistory.push({ role: "user", content: effectiveQuery });
+    state.chatHistory.push({ role: "assistant", content: question });
+    if (state.chatHistory.length > 20) state.chatHistory = state.chatHistory.slice(-20);
     if (document.body.dataset.page !== "marketplace") renderFloatingDynamicCard();
     updateConciergeContext("answer");
     if (settings.speak) await speakConcierge(question);
@@ -865,7 +874,12 @@ async function runConcierge(query, options = {}) {
   const pool = baseProduct ? getRelatedPool(baseProduct) : state.catalog.products;
   const products = rankForIntent(pool, intent, baseProduct).slice(0, 8);
   const pageTitle = getDynamicTitle(intent, baseProduct);
-  const say = await fetchConciergeSay(intent, baseProduct, products, query);
+  const voiceMode = state.voice.keepAlive;
+  const say = await fetchConciergeSay(intent, baseProduct, products, query, voiceMode);
+
+  state.chatHistory.push({ role: "user", content: query });
+  state.chatHistory.push({ role: "assistant", content: say });
+  if (state.chatHistory.length > 20) state.chatHistory = state.chatHistory.slice(-20);
 
   state.conciergeResults = { query, intent, products, pageTitle, say };
   remember("lastIntent", intent.intent || query);
@@ -977,7 +991,7 @@ function getDynamicTitle(intent, product) {
   return "Concierge picks";
 }
 
-async function fetchConciergeSay(intent, product, products, rawQuery) {
+async function fetchConciergeSay(intent, product, products, rawQuery, voiceMode = false) {
   if (!products.length) return "Nothing matched that search — try a broader color, category, or price.";
 
   const topProducts = products.slice(0, 4).map((p) => ({
@@ -989,12 +1003,18 @@ async function fetchConciergeSay(intent, product, products, rawQuery) {
   }));
 
   try {
+    const historyMessages = state.chatHistory.slice(-6);
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: [{ role: "user", content: rawQuery }],
-        catalogContext: { query: rawQuery, topProducts, totalCount: products.length }
+        messages: [...historyMessages, { role: "user", content: rawQuery }],
+        catalogContext: {
+          query: rawQuery,
+          topProducts,
+          totalCount: products.length,
+          followUp: voiceMode && products.length >= 2
+        }
       })
     });
     const data = await res.json();
