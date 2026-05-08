@@ -3,6 +3,8 @@ const http = require("node:http");
 const path = require("node:path");
 const transcribeHandler = require("./api/transcribe.js");
 const tryOnHandler = require("./api/try-on.js");
+const chatHandler = require("./api/chat.js");
+const ttsHandler = require("./api/tts.js");
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 8000);
@@ -83,6 +85,28 @@ function serveStatic(request, response) {
 
 http
   .createServer(async (request, response) => {
+    if (request.url?.startsWith("/api/chat")) {
+      try {
+        request.body = await readRequestBody(request);
+        await chatHandler(request, response);
+      } catch (error) {
+        response.writeHead(400, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : "Bad request" }));
+      }
+      return;
+    }
+
+    if (request.url?.startsWith("/api/tts")) {
+      try {
+        request.body = await readRequestBody(request);
+        await ttsHandler(request, response);
+      } catch (error) {
+        response.writeHead(400, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : "Bad request" }));
+      }
+      return;
+    }
+
     if (request.url?.startsWith("/api/try-on")) {
       try {
         request.body = await readRequestBody(request);
@@ -109,5 +133,6 @@ http
   })
   .listen(PORT, () => {
     console.log(`Cursor Commerce dev server running at http://localhost:${PORT}`);
+    console.log(`Chat/TTS API ${process.env.OPENAI_API_KEY ? "has" : "is missing"} OPENAI_API_KEY`);
     console.log(`Try-on API ${process.env.GEMINI_API_KEY ? "has" : "is missing"} GEMINI_API_KEY`);
   });

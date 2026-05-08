@@ -1,6 +1,7 @@
 (() => {
   const ASSISTANT_ID = "hfa-root";
   const SIZE_WORDS = new Set(["xxs", "xs", "s", "m", "l", "xl", "xxl", "2xl", "3xl"]);
+
   const state = {
     product: null,
     lastMouse: { x: 26, y: 130 },
@@ -9,12 +10,10 @@
     sizeSignals: 0,
     lastSizeSignalAt: 0,
     currentHoverType: "other",
-    mobileActiveMode: null,
-    mobileScrollTimer: null,
-    mobileCouponTimer: null,
     sizeHoverTimer: null,
     imageHoverTimer: null,
-    dwellTimer: null,
+    dwellSeconds: 0,
+    dwellInterval: null,
     quantityPrompted: false,
     discountShown: false,
     typingTimer: null,
@@ -22,57 +21,23 @@
     typingText: "",
     typingIndex: 0,
     drawerOpen: false,
-    uploadedTryOnImage: null
+    forSelf: null,
+    useCase: null,
+    hoveredSizes: [],
+    chatHistory: [],
+    ttsAudio: null,
+    contextAsked: false
   };
-
-  const prompts = {
-    fit: "Need fit help?",
-    tryon: "Want to see it on yourself?",
-    quantity: "Add one more and get 5% off the second piece.",
-    delivery: "Want delivery timing for your pincode?",
-    discount: "Looks like you love this product. Take XYZ10 for 10% off at checkout."
-  };
-
-  const promptHints = {
-    fit: "Press Space to open",
-    tryon: "Press Space to try on",
-    quantity: "Press Space to add one more",
-    delivery: "Press Space to check",
-    discount: "Press Space to add to bag"
-  };
-
-  const mobileNudges = {
-    tryon: {
-      label: "Want to see it on yourself?",
-      copy: "Upload a photo for a quick AI try-on preview."
-    },
-    fit: {
-      label: "Unsure about size?",
-      copy: "Get a quick fit recommendation before adding to bag."
-    },
-    delivery: {
-      label: "Need delivery timing?",
-      copy: "Enter your pincode and check arrival before checkout."
-    },
-    quantity: {
-      label: "Adding more than one?",
-      copy: "Unlock 5% off the second piece."
-    },
-    discount: {
-      label: "Coupon unlocked",
-      copy: "Use XYZ10 for 10% off at checkout."
-    }
-  };
-
-  function cleanText(value) {
-    return String(value || "").replace(/\s+/g, " ").trim();
-  }
 
   function logoUrl() {
     if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
       return chrome.runtime.getURL("assets/gymshark.png");
     }
     return "./assets/gymshark.png";
+  }
+
+  function cleanText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
   }
 
   function visibleText(el) {
@@ -139,18 +104,115 @@
 
   function extractProductContext() {
     const title = cleanText(document.querySelector("h1")?.textContent || document.title);
-    const price = cleanText(document.querySelector("[data-product-price], .product-price, .price")?.textContent || "$64");
+    const priceText = cleanText(document.querySelector("[data-product-price], .product-price, .price")?.textContent || "$44");
+    const price = priceText.replace(/[^0-9.]/g, "");
+
     const sizes = [...document.querySelectorAll("button, label, [role='radio']")]
       .filter(isVisible)
       .map((el) => visibleText(el).toUpperCase())
       .filter((text) => SIZE_WORDS.has(text.toLowerCase()) || /^(UK|US|EU)?\s?\d{1,2}(\.\d)?$/.test(text));
 
+    const ratingEl = document.querySelector(".rating");
+    const ratingText = ratingEl ? cleanText(ratingEl.textContent) : "";
+    const ratingMatch = ratingText.match(/(\d+(\.\d+)?)/);
+    const rating = ratingMatch ? parseFloat(ratingMatch[1]) : 0;
+
     return {
       title,
-      price,
+      price: price ? `$${price}` : priceText,
       sizes: [...new Set(sizes)].slice(0, 12),
-      domain: location.hostname.replace(/^www\./, "") || "demo store"
+      domain: location.hostname.replace(/^www\./, "") || "demo store",
+      colors: [],
+      tags: ["Clothing", "Activewear"],
+      category: "Activewear Top",
+      mood: "Athletic",
+      rating,
+      reviewCount: 0
     };
+  }
+
+  function buildPrompts(product) {
+    const { title, sizes, reviewCount, rating, colors } = product;
+    const shortTitle = title.split(" ").slice(0, 4).join(" ");
+
+    return {
+      fit: reviewCount > 200
+        ? `${rating}★ from ${reviewCount.toLocaleString()} reviews — want the size read?`
+        : sizes.length
+          ? `Sizes run ${sizes.slice(0, 3).join("–")}. Want help picking?`
+          : "Want fit help for this?",
+      tryon: colors.length > 1
+        ? `Also in ${colors.slice(0, 2).join(" & ")}. Want to see it on you?`
+        : "Want to see it on yourself?",
+      quantity: `Add one more ${shortTitle} and get 5% off the second piece.`,
+      delivery: "Want delivery timing for your pincode?",
+      discount: `Looks like you love this. Take XYZ10 for 10% off at checkout.`,
+      context: state.useCase
+        ? `Saving for ${state.useCase}?`
+        : "Is this for you or a gift?"
+    };
+  }
+
+  const PROMPT_HINTS = {
+    fit: "Press Space to open",
+    tryon: "Press Space to try on",
+    quantity: "Press Space to add one more",
+    delivery: "Press Space to check",
+    discount: "Press Space to add to bag",
+    context: "Press Space to answer"
+  };
+
+  function getSignals() {
+    return {
+      dwellSeconds: state.dwellSeconds,
+      hoveredSizes: state.hoveredSizes.slice(-4),
+      useCase: state.useCase,
+      forSelf: state.forSelf
+    };
+  }
+
+  async function fetchChatReply(userMessage) {
+    const product = state.product || extractProductContext();
+    state.chatHistory.push({ role: "user", content: userMessage });
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: state.chatHistory.slice(-8),
+          productContext: product,
+          signals: getSignals()
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.reply) throw new Error(data.error || "No reply");
+      state.chatHistory.push({ role: "assistant", content: data.reply });
+      return data.reply;
+    } catch {
+      const fallback = "I'm having trouble connecting right now. Try typing your question below.";
+      state.chatHistory.push({ role: "assistant", content: fallback });
+      return fallback;
+    }
+  }
+
+  async function speakText(text) {
+    try {
+      state.ttsAudio?.pause();
+      state.ttsAudio = null;
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.slice(0, 200), voice: "nova" })
+      });
+      if (!response.ok) return;
+      const blob = await response.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
+      state.ttsAudio = audio;
+      audio.play();
+    } catch {
+      // TTS is best-effort
+    }
   }
 
   function ensureRoot() {
@@ -175,20 +237,13 @@
         <button class="hfa-close" type="button" aria-label="Dismiss">×</button>
       </div>
       <div class="hfa-cart-toast" hidden></div>
-      <button class="hfa-mobile-bar" type="button" aria-label="Shopping nudge" hidden>
-        <strong></strong>
-        <span></span>
-      </button>
       <aside class="hfa-drawer" aria-label="Shopping assistant" hidden></aside>
     `;
     document.documentElement.appendChild(root);
 
     root.querySelector(".hfa-floater")?.addEventListener("click", () => {
-      if (state.drawerOpen) {
-        closeDrawer();
-      } else {
-        openDrawer("fit");
-      }
+      if (state.drawerOpen) closeDrawer();
+      else openDrawer("fit");
     });
     root.querySelector(".hfa-typewriter")?.addEventListener("click", (event) => {
       if (event.target.closest(".hfa-close")) return;
@@ -197,9 +252,6 @@
     root.querySelector(".hfa-close")?.addEventListener("click", (event) => {
       event.stopPropagation();
       hidePrompt();
-    });
-    root.querySelector(".hfa-mobile-bar")?.addEventListener("click", () => {
-      handleMobileNudge(state.mobileActiveMode);
     });
     return root;
   }
@@ -213,9 +265,8 @@
     const root = ensureRoot();
     const companion = root.querySelector(".hfa-companion");
     if (!companion) return;
-
-    const x = Math.min(window.innerWidth - 58, Math.max(10, state.lastMouse.x + 10));
-    const y = Math.min(window.innerHeight - 58, Math.max(10, state.lastMouse.y + 10));
+    const x = Math.min(window.innerWidth - 58, Math.max(10, state.lastMouse.x + 4));
+    const y = Math.min(window.innerHeight - 58, Math.max(10, state.lastMouse.y + 4));
     companion.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     companion.dataset.mood = elementType;
   }
@@ -234,10 +285,14 @@
   }
 
   function showTypewriter(mode) {
+    const product = state.product || extractProductContext();
+    const prompts = buildPrompts(product);
+    const promptText = prompts[mode] || prompts.fit;
+
     if (state.lastPrompt === mode && !ensureRoot().querySelector(".hfa-typewriter")?.hidden) return;
     state.lastPrompt = mode;
     state.panelMode = mode;
-    state.typingText = prompts[mode];
+    state.typingText = promptText;
     state.typed = "";
     state.typingIndex = 0;
 
@@ -250,7 +305,7 @@
     box.dataset.mode = mode;
     placePrompt();
     text.textContent = "";
-    hint.textContent = promptHints[mode] || promptHints.fit;
+    hint.textContent = PROMPT_HINTS[mode] || PROMPT_HINTS.fit;
     clearInterval(state.typingTimer);
     state.typingTimer = setInterval(() => {
       state.typed += state.typingText[state.typingIndex] || "";
@@ -294,7 +349,15 @@
     const product = state.product || extractProductContext();
     drawer.hidden = false;
     drawer.dataset.mode = mode;
-    drawer.innerHTML = mode === "tryon" ? tryOnMarkup(product) : fitMarkup(product);
+
+    if (mode === "context") {
+      drawer.innerHTML = contextMarkup();
+    } else if (mode === "tryon") {
+      drawer.innerHTML = tryOnMarkup(product);
+    } else {
+      drawer.innerHTML = fitMarkup(product);
+    }
+
     setDrawerState(true);
     bindDrawer(drawer, mode);
   }
@@ -303,10 +366,12 @@
     const drawer = ensureRoot().querySelector(".hfa-drawer");
     if (drawer) drawer.hidden = true;
     setDrawerState(false);
-    evaluateMobileNudge();
   }
 
   function fitMarkup(product) {
+    const sizeNote = product.sizes.length
+      ? `<p>Sizes available: <strong>${product.sizes.join(", ")}</strong>.</p>`
+      : "";
     return `
       <header class="hfa-drawer-header">
         <div>
@@ -316,18 +381,14 @@
         <button class="hfa-drawer-close" type="button" aria-label="Close">×</button>
       </header>
       <div class="hfa-guidance">
-        <p>For this style, start with your usual top size. Size up if you want more room through the chest or shoulders.</p>
-        <ul>
-          <li>Sweetheart necklines usually feel more fitted.</li>
-          <li>Long sleeves can feel tighter if you are between sizes.</li>
-          <li>Pick the larger size for training comfort.</li>
-        </ul>
+        ${sizeNote}
+        <p>Tell me your height, weight, usual size, and fit preference — I'll suggest the right size.</p>
       </div>
       <div class="hfa-chat" aria-live="polite">
-        <div class="hfa-message hfa-ai">Tell me your height, weight, usual size, and fit preference. I will suggest a size.</div>
+        <div class="hfa-message hfa-ai">What's your usual size and how do you like things to fit?</div>
       </div>
       <form class="hfa-chat-form">
-        <input name="message" placeholder="Example: 5'6, 58 kg, usually S, snug fit" autocomplete="off" />
+        <input name="message" placeholder="e.g. 5'6, 58 kg, usually S, snug fit" autocomplete="off" />
         <button type="submit">Send</button>
       </form>
     `;
@@ -345,14 +406,13 @@
       <label class="hfa-upload">
         <input type="file" accept="image/*" />
         <span>Upload your photo</span>
-        <small>AI preview only. It can be inaccurate, and it is not sizing or body advice.</small>
+        <small>Prototype preview only. Image stays local in this demo.</small>
       </label>
-      <button class="hfa-generate" type="button" disabled>Generate AI try-on</button>
       <div class="hfa-preview">
         <span>Your preview appears here.</span>
       </div>
       <div class="hfa-chat" aria-live="polite">
-        <div class="hfa-message hfa-ai">Upload a clear photo, then generate a Nano Banana preview. Treat it as a rough visual mockup, not a promise of exact fit.</div>
+        <div class="hfa-message hfa-ai">Upload a straight-on photo and ask about the color, neckline, or fit.</div>
       </div>
       <form class="hfa-chat-form">
         <input name="message" placeholder="Ask about color, style, or fit" autocomplete="off" />
@@ -361,190 +421,107 @@
     `;
   }
 
+  function contextMarkup() {
+    return `
+      <header class="hfa-drawer-header">
+        <div>
+          <span>Quick question</span>
+          <strong>Help me help you</strong>
+        </div>
+        <button class="hfa-drawer-close" type="button" aria-label="Close">×</button>
+      </header>
+      <div class="hfa-guidance">
+        <p>Two quick answers let me give you much better suggestions.</p>
+      </div>
+      <div class="hfa-context-options">
+        <p class="hfa-context-q">Is this for you or a gift?</p>
+        <div class="hfa-context-btns">
+          <button type="button" data-answer="self">For me</button>
+          <button type="button" data-answer="gift">Gift</button>
+        </div>
+        <p class="hfa-context-q">How will you use it?</p>
+        <div class="hfa-context-btns">
+          <button type="button" data-usecase="training">Training</button>
+          <button type="button" data-usecase="casual">Casual</button>
+          <button type="button" data-usecase="both">Both</button>
+        </div>
+      </div>
+      <div class="hfa-chat" aria-live="polite"></div>
+      <form class="hfa-chat-form">
+        <input name="message" placeholder="Or just ask anything..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    `;
+  }
+
   function bindDrawer(drawer, mode) {
     drawer.querySelector(".hfa-drawer-close")?.addEventListener("click", closeDrawer);
-    drawer.querySelector(".hfa-chat-form")?.addEventListener("submit", (event) => {
+
+    drawer.querySelectorAll("[data-answer]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.forSelf = btn.dataset.answer === "self";
+        drawer.querySelectorAll("[data-answer]").forEach((b) => b.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+      });
+    });
+
+    drawer.querySelectorAll("[data-usecase]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.useCase = btn.dataset.usecase;
+        drawer.querySelectorAll("[data-usecase]").forEach((b) => b.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+        const chat = drawer.querySelector(".hfa-chat");
+        if (chat) {
+          const msg = state.forSelf === false
+            ? `Got it — a gift for ${state.useCase} use. I'll keep that in mind.`
+            : `Got it — ${state.useCase} use. The snug fit works well for training; size up for casual layering.`;
+          addChatMessage(drawer, msg, "ai");
+          speakText(msg);
+        }
+      });
+    });
+
+    drawer.querySelector(".hfa-chat-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const input = event.currentTarget.elements.message;
       const text = cleanText(input.value);
       if (!text) return;
       input.value = "";
       addChatMessage(drawer, text, "user");
-      const reply = mode === "tryon" ? makeTryOnReply(text) : makeFitReply(text);
-      setTimeout(() => addChatMessage(drawer, reply, "ai"), 180);
+      const thinkingEl = addChatMessage(drawer, "…", "ai");
+      const reply = await fetchChatReply(text);
+      if (thinkingEl) thinkingEl.textContent = reply;
+      speakText(reply);
     });
 
     const upload = drawer.querySelector("input[type='file']");
     upload?.addEventListener("change", () => {
       const file = upload.files?.[0];
       if (!file) return;
-      if (!/^image\//.test(file.type)) {
-        addChatMessage(drawer, "Please upload an image file for the try-on preview.", "ai");
-        return;
-      }
-      resizeImageFile(file)
-        .then((image) => {
-        state.uploadedTryOnImage = {
-          dataUrl: image.dataUrl,
-          mimeType: image.mimeType
-        };
-        const preview = drawer.querySelector(".hfa-preview");
-        const generateButton = drawer.querySelector(".hfa-generate");
-        preview.innerHTML = `<img src="${image.dataUrl}" alt="Uploaded photo preview" />`;
-        if (generateButton) generateButton.disabled = false;
-        addChatMessage(drawer, "Photo loaded. Press Generate AI try-on to create the preview.", "ai");
-        })
-        .catch(() => addChatMessage(drawer, "Could not read that image. Try a JPEG, PNG, or WebP photo.", "ai"));
-    });
-
-    drawer.querySelector(".hfa-generate")?.addEventListener("click", () => generateTryOn(drawer));
-  }
-
-  async function generateTryOn(drawer) {
-    if (!state.uploadedTryOnImage?.dataUrl) {
-      addChatMessage(drawer, "Upload your photo first, then I can generate the try-on preview.", "ai");
-      return;
-    }
-
-    const generateButton = drawer.querySelector(".hfa-generate");
-    const preview = drawer.querySelector(".hfa-preview");
-    if (generateButton) {
-      generateButton.disabled = true;
-      generateButton.textContent = "Generating...";
-    }
-    preview.innerHTML = `<span>Generating AI try-on preview...</span>`;
-
-    try {
-      const productImage = await getCurrentProductImagePart();
-      const response = await fetch("/api/try-on", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          productTitle: state.product?.title || extractProductContext().title,
-          userImage: dataUrlToImagePart(state.uploadedTryOnImage.dataUrl, state.uploadedTryOnImage.mimeType),
-          productImage
-        })
-      });
-
-      const isJsonResponse = (response.headers.get("content-type") || "").includes("application/json");
-      const result = isJsonResponse ? await response.json().catch(() => ({})) : {};
-      if (!response.ok || !result.image) {
-        if (!isJsonResponse && (response.status === 404 || response.status === 405 || response.status === 501)) {
-          throw new Error("The local static server cannot run the try-on API. Start this project with `node local-dev-server.js`, then reload the page.");
-        }
-        throw new Error(result.error || "Gemini did not return an image. Try a clearer photo or a simpler product angle.");
-      }
-
-      preview.innerHTML = `<img src="${result.image}" alt="Generated AI try-on preview" />`;
-      addChatMessage(drawer, "Generated a rough VTON preview with the tank applied to your photo. It may be wrong around edges, proportions, fabric, or fit.", "ai");
-    } catch (error) {
-      preview.innerHTML = `<span>Could not generate the preview.</span>`;
-      addChatMessage(drawer, error instanceof Error ? error.message : "Try-on generation failed.", "ai");
-    } finally {
-      if (generateButton) {
-        generateButton.disabled = false;
-        generateButton.textContent = "Generate AI try-on";
-      }
-    }
-  }
-
-  async function getCurrentProductImagePart() {
-    const image = document.querySelector("[data-main-product-image]") || document.querySelector("[data-product-main-trigger] img");
-    if (!image?.src) throw new Error("Could not find the product image.");
-    const response = await fetch(image.src);
-    if (!response.ok) throw new Error("Could not load the product image for try-on.");
-    const blob = await response.blob();
-    const dataUrl = await blobToDataUrl(blob);
-    return dataUrlToImagePart(dataUrl, blob.type || "image/webp");
-  }
-
-  function blobToDataUrl(blob) {
-    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("Could not read image file."));
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  function resizeImageFile(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("Could not read image file."));
       reader.onload = () => {
-        const image = new Image();
-        image.onerror = () => reject(new Error("Could not load image file."));
-        image.onload = () => {
-          const maxSide = 1200;
-          const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-          const width = Math.max(1, Math.round(image.width * scale));
-          const height = Math.max(1, Math.round(image.height * scale));
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const context = canvas.getContext("2d");
-          context.drawImage(image, 0, 0, width, height);
-          resolve({
-            dataUrl: canvas.toDataURL("image/jpeg", 0.86),
-            mimeType: "image/jpeg"
-          });
-        };
-        image.src = String(reader.result || "");
+        const preview = drawer.querySelector(".hfa-preview");
+        preview.innerHTML = `<img src="${reader.result}" alt="Uploaded photo preview" />`;
+        const msg = "Photo loaded. A real try-on model would overlay the garment here.";
+        addChatMessage(drawer, msg, "ai");
+        speakText(msg);
       };
       reader.readAsDataURL(file);
     });
   }
 
-  function dataUrlToImagePart(dataUrl, fallbackMimeType = "image/jpeg") {
-    const match = String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
-    if (!match) throw new Error("Image data was not in a supported format.");
-    return {
-      mimeType: match[1] || fallbackMimeType,
-      data: match[2]
-    };
-  }
-
   function addChatMessage(drawer, text, role) {
     const chat = drawer.querySelector(".hfa-chat");
+    if (!chat) return null;
     const message = document.createElement("div");
     message.className = `hfa-message hfa-${role}`;
     message.textContent = text;
     chat.appendChild(message);
     chat.scrollTop = chat.scrollHeight;
-  }
-
-  function makeFitReply(text) {
-    const lower = text.toLowerCase();
-    const usual = lower.match(/\b(xxs|xs|s|m|l|xl|xxl|2xl|3xl)\b/)?.[1]?.toUpperCase() || "M";
-    const wantsRoom = /relaxed|loose|oversized|room|comfort/.test(lower);
-    const wantsSnug = /snug|tight|slim|fitted/.test(lower);
-    const size = wantsRoom ? nextSize(usual) : wantsSnug ? usual : usual;
-    const backup = wantsRoom ? usual : nextSize(usual);
-    return `${size} looks like the best starting size. Go ${backup} if you are between sizes or want more room through the chest and sleeves.`;
-  }
-
-  function makeTryOnReply(text) {
-    const lower = text.toLowerCase();
-    if (/color|pink|shade/.test(lower)) return "The pink reads soft and sporty. I would compare it against your usual workout colors and check it in natural light.";
-    if (/sleeve|neck|crop/.test(lower)) return "The long sleeve and sweetheart neckline are the key checks here. A try-on preview should focus on shoulder pull, sleeve length, and crop height.";
-    return "For a strong try-on result, use a front-facing photo with good light. I would preview the top and call out neckline, sleeve length, and overall silhouette.";
-  }
-
-  function nextSize(size) {
-    const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL"];
-    const index = Math.max(0, order.indexOf(size));
-    return order[Math.min(order.length - 1, index + 1)];
+    return message;
   }
 
   function bindListeners() {
-    document.querySelectorAll(".site-logo, .brand").forEach((element) => {
-      element.addEventListener("mouseenter", () => {
-        if (!state.drawerOpen) showTypewriter("discount");
-      });
-    });
-
     document.querySelectorAll("[data-product-main-trigger], [data-product-main-trigger] img").forEach((element) => {
       element.addEventListener("click", () => {
         if (!state.drawerOpen) showTypewriter("tryon");
@@ -568,12 +545,16 @@
         state.currentHoverType = type;
         moveCompanion(type);
         clearTimeout(state.sizeHoverTimer);
-        if (state.lastPrompt === "fit" && !isSizeIntent(type)) {
-          hidePrompt();
-        }
+        if (state.lastPrompt === "fit" && !isSizeIntent(type)) hidePrompt();
         if (type !== "product_image") clearTimeout(state.imageHoverTimer);
         if (isSizeIntent(type) && previousType !== type) {
-          state.sizeHoverTimer = setTimeout(() => countSizeSignal(type), 900);
+          state.sizeHoverTimer = setTimeout(() => {
+            const sizeText = visibleText(event.target).toUpperCase();
+            if (SIZE_WORDS.has(sizeText.toLowerCase()) && !state.hoveredSizes.includes(sizeText)) {
+              state.hoveredSizes.push(sizeText);
+            }
+            countSizeSignal(type);
+          }, 900);
         }
         if (type === "product_image" && previousType !== "product_image") {
           clearTimeout(state.imageHoverTimer);
@@ -605,9 +586,6 @@
         state.quantityPrompted = true;
         showTypewriter("quantity");
       }
-      if (isMobileViewport() && Number(event.detail?.quantity || 1) >= 2) {
-        showMobileNudge("quantity");
-      }
     });
 
     document.addEventListener("keydown", (event) => {
@@ -623,123 +601,20 @@
         handlePromptAction();
       }
     });
-
-    window.addEventListener(
-      "scroll",
-      () => {
-        if (!isMobileViewport() || state.drawerOpen) return;
-        clearTimeout(state.mobileScrollTimer);
-        state.mobileScrollTimer = setTimeout(evaluateMobileNudge, 90);
-      },
-      { passive: true }
-    );
-
-    window.addEventListener("resize", evaluateMobileNudge);
-    evaluateMobileNudge();
   }
 
   function handlePromptAction() {
-    if (state.lastPrompt === "discount") {
-      addToBagWithDiscount();
-      return;
-    }
+    if (state.lastPrompt === "discount") { addToBagWithDiscount(); return; }
     if (state.lastPrompt === "quantity") {
       incrementQuantity();
       hidePrompt();
       showCartToast("Second piece added. Extra 5% applies to the second item.");
       return;
     }
-    if (state.lastPrompt === "delivery") {
-      openDeliveryPanel();
-      return;
-    }
-    if (state.lastPrompt === "tryon") {
-      openDrawer("tryon");
-      return;
-    }
-    if (state.lastPrompt === "fit") {
-      openDrawer("fit");
-    }
-  }
-
-  function handleMobileNudge(mode) {
-    hideMobileNudge();
-    if (mode === "fit") {
-      openDrawer("fit");
-      return;
-    }
-    if (mode === "tryon") {
-      openDrawer("tryon");
-      return;
-    }
-    if (mode === "delivery") {
-      openDeliveryPanel();
-      showCartToast("Enter your pincode to check delivery timing.");
-      return;
-    }
-    if (mode === "quantity") {
-      incrementQuantity();
-      showCartToast("Second piece added. Extra 5% applies to the second item.");
-      return;
-    }
-    if (mode === "discount") {
-      showTypewriter("discount");
-      showCartToast("Coupon ready: XYZ10");
-    }
-  }
-
-  function isMobileViewport() {
-    return window.matchMedia("(max-width: 700px)").matches;
-  }
-
-  function showMobileNudge(mode) {
-    if (!isMobileViewport() || state.drawerOpen || !mobileNudges[mode]) return;
-    const bar = ensureRoot().querySelector(".hfa-mobile-bar");
-    state.mobileActiveMode = mode;
-    bar.querySelector("strong").textContent = mobileNudges[mode].label;
-    bar.querySelector("span").textContent = mobileNudges[mode].copy;
-    bar.dataset.mode = mode;
-    bar.hidden = false;
-  }
-
-  function hideMobileNudge() {
-    const bar = ensureRoot().querySelector(".hfa-mobile-bar");
-    if (bar) bar.hidden = true;
-    state.mobileActiveMode = null;
-  }
-
-  function evaluateMobileNudge() {
-    if (!isMobileViewport() || state.drawerOpen) {
-      hideMobileNudge();
-      return;
-    }
-
-    const viewportCenter = window.innerHeight * 0.56;
-    const candidates = [
-      { mode: "tryon", selector: ".gallery, [data-product-gallery], [data-product-main-trigger]" },
-      { mode: "fit", selector: ".sizes, .size-guide" },
-      { mode: "quantity", selector: ".quantity-row, .add" },
-      { mode: "delivery", selector: ".delivery-check" }
-    ];
-
-    const match = candidates.find((candidate) => {
-      const element = document.querySelector(candidate.selector);
-      if (!element) return false;
-      const rect = element.getBoundingClientRect();
-      return rect.top < viewportCenter && rect.bottom > 86;
-    });
-
-    if (match) {
-      showMobileNudge(match.mode);
-      return;
-    }
-
-    if (window.scrollY > window.innerHeight * 0.85) {
-      showMobileNudge("discount");
-      return;
-    }
-
-    hideMobileNudge();
+    if (state.lastPrompt === "delivery") { openDeliveryPanel(); return; }
+    if (state.lastPrompt === "context") { openDrawer("context"); return; }
+    if (state.lastPrompt === "tryon") { openDrawer("tryon"); return; }
+    if (state.lastPrompt === "fit") { openDrawer("fit"); }
   }
 
   function addToBagWithDiscount() {
@@ -756,14 +631,12 @@
   }
 
   function incrementQuantity() {
-    const plus = document.querySelector("[data-quantity-plus]");
-    plus?.click();
+    document.querySelector("[data-quantity-plus]")?.click();
   }
 
   function openDeliveryPanel() {
     hidePrompt();
-    const deliveryInput = document.querySelector(".delivery-check input");
-    deliveryInput?.focus();
+    document.querySelector(".delivery-check input")?.focus();
   }
 
   function showCartToast(message) {
@@ -771,14 +644,20 @@
     toast.textContent = message;
     toast.hidden = false;
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => {
-      toast.hidden = true;
-    }, 3200);
+    toast._timer = setTimeout(() => { toast.hidden = true; }, 3200);
   }
 
   function scheduleDwellPrompt() {
-    clearTimeout(state.dwellTimer);
-    state.dwellTimer = setTimeout(() => {
+    state.dwellInterval = setInterval(() => { state.dwellSeconds += 1; }, 1000);
+
+    setTimeout(() => {
+      if (!state.drawerOpen && !state.contextAsked && state.forSelf === null) {
+        state.contextAsked = true;
+        showTypewriter("context");
+      }
+    }, 8000);
+
+    setTimeout(() => {
       if (!state.discountShown && !state.drawerOpen) {
         state.discountShown = true;
         hidePrompt();
@@ -788,9 +667,9 @@
   }
 
   function escapeHtml(value) {
-    return String(value || "").replace(/[&<>"']/g, (char) => {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char];
-    });
+    return String(value || "").replace(/[&<>"']/g, (char) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char])
+    );
   }
 
   function init() {

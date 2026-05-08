@@ -384,6 +384,53 @@
   width: 100%;
 }
 
+.hfa-context-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hfa-context-q {
+  font-size: 13px;
+  font-weight: 750;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.hfa-context-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.hfa-context-btns button {
+  background: #ffffff;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  transition: border-color 120ms, background 120ms;
+}
+
+.hfa-context-btns button:hover {
+  border-color: #111111;
+}
+
+.hfa-context-btns button.is-selected {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hfa-companion {
+    display: none;
+  }
+}
+
 @keyframes hfa-blink {
   50% {
     opacity: 0;

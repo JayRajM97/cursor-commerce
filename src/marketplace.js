@@ -4,6 +4,7 @@ const state = {
   query: "",
   currentProduct: null,
   conciergeResults: null,
+  pendingClarification: null,
   voice: {
     recognition: null,
     recorder: null,
@@ -48,6 +49,19 @@ const COLOR_WORDS = [
   "navy",
   "purple",
   "red"
+];
+
+const CATEGORY_MAP = [
+  { pattern: /\bchair[s]?\b|\bseating\b|\bstool[s]?\b|\boffice chair[s]?\b/, tag: "Furniture", label: "chair" },
+  { pattern: /\bshoe[s]?\b|\bfootwear\b|\bsneaker[s]?\b|\bboot[s]?\b|\bheels?\b|\bsandal[s]?\b/, tag: "Footwear", label: "footwear" },
+  { pattern: /\bcandle[s]?\b/, tag: "Candles", label: "candle" },
+  { pattern: /\brug[s]?\b/, tag: "Rugs", label: "rug" },
+  { pattern: /\bcurtain[s]?\b|\bdrape[s]?\b|\bblind[s]?\b/, tag: "Curtains", label: "curtain" },
+  { pattern: /\bcrystal[s]?\b|\bquartz\b|\bamethyst\b|\bcitrine\b|\bgeode\b/, tag: "Crystals", label: "crystal" },
+  { pattern: /\bcloth[es]?\b|\bdress[es]?\b|\btop[s]?\b|\blegging[s]?\b|\bshirt[s]?\b|\bjacket[s]?\b/, tag: "Clothing", label: "clothing" },
+  { pattern: /\bplant[s]?\b|\bpotted\b/, tag: "Plants", label: "plant" },
+  { pattern: /\bvase[s]?\b/, tag: "Vases", label: "vase" },
+  { pattern: /\bcandle[s]?\b/, tag: "Candles", label: "candle" }
 ];
 
 init();
@@ -319,7 +333,15 @@ function initConcierge() {
         <span id="conciergeLabel">Ask the concierge</span>
         <input id="conciergeInput" type="text" autocomplete="off" />
       </label>
-      <button class="concierge-voice" id="conciergeVoice" type="button" aria-label="Record voice command">Voice</button>
+      <button class="concierge-voice" id="conciergeVoice" type="button" aria-label="Record voice command">
+        <svg class="concierge-mic-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+        <span class="concierge-voice-label">Voice</span>
+      </button>
       <button class="concierge-submit" type="submit">Ask</button>
     </form>
     <div class="concierge-voice-status" id="conciergeVoiceStatus" aria-live="polite"></div>
@@ -333,13 +355,14 @@ function initConcierge() {
     document.querySelector("#conciergeInput")?.focus();
   });
 
-  document.querySelector("#conciergeForm").addEventListener("submit", (event) => {
+  document.querySelector("#conciergeForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const input = document.querySelector("#conciergeInput");
     const query = input.value.trim();
     if (!query) return;
-    const action = runConcierge(query, { speak: false, syncUrl: true });
     input.value = "";
+    showConciergeSayLoading();
+    const action = await runConcierge(query, { speak: false, syncUrl: true });
     renderConciergeReply(action);
   });
 
@@ -369,7 +392,7 @@ function initVoiceControls() {
     return;
   }
 
-  if (status) status.textContent = "Tap Voice, speak, then tap Stop. It also stops automatically.";
+  if (status) status.textContent = "";
 
   if (Recognition) {
     const recognition = new Recognition();
@@ -382,8 +405,8 @@ function initVoiceControls() {
       state.voice.isListening = true;
       state.voice.mode = "speech";
       voiceButton.classList.add("is-listening");
-      voiceButton.textContent = "Listening";
-      if (status) status.textContent = "Listening. Say what you want to see.";
+      setVoiceLabel(voiceButton, "Stop");
+      if (status) status.textContent = "Listening — say what you want to see.";
     });
 
     recognition.addEventListener("result", (event) => {
@@ -417,8 +440,9 @@ function initVoiceControls() {
     { passive: true }
   );
   window.addEventListener("keydown", (event) => {
-    if (event.code !== "Space" || isTypingTarget(event.target) || event.repeat) return;
+    if (event.code !== "Space" || isTypingTarget(event.target)) return;
     event.preventDefault();
+    if (event.repeat) return;
     openConciergeWidget();
     startVoice();
   });
@@ -465,6 +489,17 @@ function stopVoice() {
 function stopVoiceSession() {
   state.voice.keepAlive = false;
   stopVoice();
+  const voiceButton = document.querySelector("#conciergeVoice");
+  const status = document.querySelector("#conciergeVoiceStatus");
+  voiceButton?.classList.remove("is-live");
+  setVoiceLabel(voiceButton, "Voice");
+  if (status) status.textContent = "";
+}
+
+function setVoiceLabel(btn, label) {
+  const span = btn?.querySelector(".concierge-voice-label");
+  if (span) span.textContent = label;
+  else if (btn) btn.textContent = label;
 }
 
 function stopVoiceUi() {
@@ -473,8 +508,11 @@ function stopVoiceUi() {
   const voiceButton = document.querySelector("#conciergeVoice");
   const status = document.querySelector("#conciergeVoiceStatus");
   voiceButton?.classList.remove("is-listening");
-  if (voiceButton && !voiceButton.disabled) voiceButton.textContent = "Voice";
-  if (status && status.textContent.startsWith("Listening")) status.textContent = "Voice ready.";
+  if (voiceButton && !voiceButton.disabled) {
+    setVoiceLabel(voiceButton, state.voice.keepAlive ? "End" : "Voice");
+    voiceButton.classList.toggle("is-live", state.voice.keepAlive);
+  }
+  if (status && status.textContent.startsWith("Listening")) status.textContent = "";
 }
 
 async function startAudioRecording() {
@@ -492,9 +530,10 @@ async function startAudioRecording() {
     state.voice.isListening = true;
     state.voice.mode = "record";
     startVoiceLevelMeter(stream);
+    voiceButton?.classList.remove("is-live");
     voiceButton?.classList.add("is-listening");
-    if (voiceButton) voiceButton.textContent = "Stop";
-    if (status) status.textContent = "Recording. Speak now, then tap Stop. Auto-stops in 7 seconds.";
+    if (voiceButton) setVoiceLabel(voiceButton, "Stop");
+    if (status) status.textContent = "Recording — speak now. Stops in 7 s.";
 
     recorder.addEventListener("dataavailable", (event) => {
       if (event.data?.size) state.voice.chunks.push(event.data);
@@ -522,31 +561,28 @@ function stopAudioRecording() {
 }
 
 async function handleRecordingStopped() {
-  const voiceButton = document.querySelector("#conciergeVoice");
   const status = document.querySelector("#conciergeVoiceStatus");
   const chunks = state.voice.chunks.slice();
   const mimeType = state.voice.recorder?.mimeType || getRecorderMimeType() || "audio/webm";
   const maxVolume = state.voice.maxVolume;
 
   cleanupAudioStream();
-  state.voice.isListening = false;
-  state.voice.mode = "";
-  voiceButton?.classList.remove("is-listening");
-  if (voiceButton && !voiceButton.disabled) voiceButton.textContent = state.voice.keepAlive ? "Stop" : "Voice";
+  // stopVoiceUi: clears is-listening, sets is-live when keepAlive=true
+  stopVoiceUi();
 
   if (!chunks.length) {
-    if (status) status.textContent = "No audio was recorded. Try again.";
+    if (status) status.textContent = state.voice.keepAlive ? "Didn't catch that — try again." : "";
     restartContinuousVoice();
     return;
   }
 
   if (maxVolume < 0.018) {
-    if (status) status.textContent = "I did not hear speech, so I did not call transcription. Try again or type it.";
+    if (status) status.textContent = state.voice.keepAlive ? "Too quiet — speak closer to mic." : "";
     restartContinuousVoice();
     return;
   }
 
-  if (status) status.textContent = "Transcribing voice...";
+  if (status) status.textContent = "Heard you...";
   try {
     const audio = await blobToInlineData(new Blob(chunks, { type: mimeType }));
     const response = await fetch("/api/transcribe", {
@@ -560,9 +596,8 @@ async function handleRecordingStopped() {
     }
     const input = document.querySelector("#conciergeInput");
     if (input) input.value = result.transcript;
-    if (status) status.textContent = `Heard: "${result.transcript}"`;
+    // submitVoiceQuery owns the full loop: LLM → TTS → restart
     submitVoiceQuery(result.transcript);
-    restartContinuousVoice();
   } catch (error) {
     if (status) status.textContent = getFriendlyTranscriptionError(error);
     state.voice.keepAlive = false;
@@ -640,21 +675,52 @@ function blobToInlineData(blob) {
   });
 }
 
-function submitVoiceQuery(query) {
+async function submitVoiceQuery(query) {
   const input = document.querySelector("#conciergeInput");
   if (input) input.value = "";
-  const action = runConcierge(query, { speak: true, syncUrl: true });
+  const status = document.querySelector("#conciergeVoiceStatus");
+
+  showConciergeSayLoading();
+  if (status) status.textContent = "Thinking...";
+
+  const action = await runConcierge(query, { speak: false, syncUrl: true });
   renderConciergeReply(action);
+
+  if (action.say) {
+    if (status) status.textContent = "Speaking...";
+    await speakConcierge(action.say);
+  }
+
+  if (state.voice.keepAlive) {
+    const btn = document.querySelector("#conciergeVoice");
+    btn?.classList.add("is-live");
+    btn?.classList.remove("is-listening");
+    if (status) status.textContent = "Listening...";
+    setVoiceLabel(btn, "End");
+    restartContinuousVoice();
+  } else {
+    if (status) status.textContent = "";
+  }
 }
 
-function speakConcierge(text) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  utterance.volume = 0.9;
-  window.speechSynthesis.speak(utterance);
+async function speakConcierge(text) {
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text.slice(0, 200), voice: "nova" })
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const audio = new Audio(URL.createObjectURL(blob));
+    return new Promise((resolve) => {
+      audio.addEventListener("ended", resolve, { once: true });
+      audio.addEventListener("error", resolve, { once: true });
+      audio.play().catch(resolve);
+    });
+  } catch {
+    // TTS is best-effort
+  }
 }
 
 function openConciergeWidget() {
@@ -743,14 +809,63 @@ function getCatalogPlaceholder(primary) {
   return "Try: calm desk decor under $20";
 }
 
-function runConcierge(query, options = {}) {
+function shouldAskClarification(intent) {
+  if (intent.colors.length || intent.maxPrice || intent.useCase) return false;
+  if (intent.wantsCalm || intent.wantsReview || intent.wantsCheaper) return false;
+  return Boolean(intent.categoryFilter);
+}
+
+async function fetchClarifyingQuestion(query, baseProduct) {
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: query }],
+        catalogContext: {
+          query,
+          clarifyMode: true,
+          baseCategory: baseProduct?.category || ""
+        }
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.reply) return data.reply;
+  } catch {}
+  return "What will you use it for — work, casual, or a specific room?";
+}
+
+async function runConcierge(query, options = {}) {
   const settings = { syncUrl: false, speak: false, ...options };
-  const intent = parseConciergeIntent(query);
+
+  // Merge previous clarification question with user's answer
+  let effectiveQuery = query;
+  let answeredClarification = false;
+  if (state.pendingClarification) {
+    effectiveQuery = `${state.pendingClarification} ${query}`.trim();
+    state.pendingClarification = null;
+    answeredClarification = true;
+  }
+
+  const intent = parseConciergeIntent(effectiveQuery);
   const baseProduct = state.currentProduct;
+
+  // Ask one clarifying question before showing products for vague browse requests
+  if (!answeredClarification && shouldAskClarification(intent)) {
+    state.pendingClarification = effectiveQuery;
+    const question = await fetchClarifyingQuestion(effectiveQuery, baseProduct);
+    const result = { say: question, products: [], pageTitle: "One quick question" };
+    state.conciergeResults = { query: effectiveQuery, intent, products: [], pageTitle: result.pageTitle, say: question };
+    if (document.body.dataset.page !== "marketplace") renderFloatingDynamicCard();
+    updateConciergeContext("answer");
+    if (settings.speak) await speakConcierge(question);
+    return result;
+  }
+
   const pool = baseProduct ? getRelatedPool(baseProduct) : state.catalog.products;
   const products = rankForIntent(pool, intent, baseProduct).slice(0, 8);
   const pageTitle = getDynamicTitle(intent, baseProduct);
-  const say = getConciergeSay(intent, baseProduct, products);
+  const say = await fetchConciergeSay(intent, baseProduct, products, query);
 
   state.conciergeResults = { query, intent, products, pageTitle, say };
   remember("lastIntent", intent.intent || query);
@@ -781,6 +896,8 @@ function parseConciergeIntent(query) {
   if (lower.includes("gift")) useCase = "gift";
   if (lower.includes("room") || lower.includes("bedroom") || lower.includes("living")) useCase = "room decor";
 
+  const categoryMatch = CATEGORY_MAP.find((c) => c.pattern.test(lower));
+
   return {
     raw: query,
     intent: lower,
@@ -792,7 +909,9 @@ function parseConciergeIntent(query) {
     wantsCheaper: /\b(cheap|cheaper|under|below|budget)\b/.test(lower),
     wantsCalm: /\b(calm|calmer|subtle|soft|peaceful|minimal)\b/.test(lower),
     wantsReview: /\b(review|rating|risk|complain|liked|disliked)\b/.test(lower),
-    wantsSimilar: /\b(similar|more like|alternative|another|different)\b/.test(lower)
+    wantsSimilar: /\b(similar|more like|alternative|another|different)\b/.test(lower),
+    categoryFilter: categoryMatch?.tag || "",
+    categoryLabel: categoryMatch?.label || ""
   };
 }
 
@@ -816,8 +935,19 @@ function rankForIntent(products, intent, baseProduct) {
       if (intent.wantsCalm && ["Calm", "Minimal", "Natural"].includes(product.mood)) score += 20;
       if (intent.wantsReview && product.reviewCount > 1000) score += 28;
       if (intent.wantsCheaper) score += Math.max(0, 22 - product.price);
-      if (haystack.includes("crystal")) score += 6;
-      if (haystack.includes("decor")) score += 4;
+      if (intent.categoryFilter) {
+        const cat = intent.categoryFilter.toLowerCase();
+        const label = intent.categoryLabel.toLowerCase();
+        if (
+          product.tags.some((t) => t.toLowerCase() === cat) ||
+          product.category.toLowerCase().includes(label) ||
+          product.category.toLowerCase().includes(cat) ||
+          product.rootCategory.toLowerCase().includes(cat) ||
+          haystack.includes(label)
+        ) {
+          score += 50;
+        }
+      }
       score += Math.max(0, 12 - product.rank / 10);
       return { product, score };
     })
@@ -847,24 +977,69 @@ function getDynamicTitle(intent, product) {
   return "Concierge picks";
 }
 
-function getConciergeSay(intent, product, products) {
-  if (!products.length) return "I could not find a strong match in this CSV slice. Try a broader color, category, or price.";
-  const first = products[0];
-  if (intent.surface || intent.room) {
-    return `Got it. I saved ${[intent.surface, intent.room].filter(Boolean).join(" + ")} and put ${first.mood.toLowerCase()} ${first.category.toLowerCase()} first.`;
+async function fetchConciergeSay(intent, product, products, rawQuery) {
+  if (!products.length) return "Nothing matched that search — try a broader color, category, or price.";
+
+  const topProducts = products.slice(0, 4).map((p) => ({
+    name: p.name.split(" ").slice(0, 6).join(" "),
+    price: p.price,
+    mood: p.mood,
+    category: p.category,
+    colors: p.colors.slice(0, 2)
+  }));
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: rawQuery }],
+        catalogContext: { query: rawQuery, topProducts, totalCount: products.length }
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.reply) return data.reply;
+  } catch {
+    // fall through to local fallback
   }
-  if (intent.wantsReview) return `I prioritized products with stronger review signals. ${first.name} is the first match.`;
-  if (intent.maxPrice) return `I filtered around your budget and found ${products.length} good matches, starting with ${first.name}.`;
-  if (product) return `Based on this ${product.category.toLowerCase()}, I found ${products.length} nearby options with matching signals.`;
-  return `I found ${products.length} catalog picks that match your ask.`;
+
+  // Fallback: natural local summary without jargon
+  const first = products[0];
+  const firstName = first.name.split(" ").slice(0, 5).join(" ");
+  if (intent.maxPrice) return `${products.length} picks under $${intent.maxPrice} — ${firstName} is the top one.`;
+  if (intent.useCase.includes("gift")) return `${products.length} gift-ready picks — ${firstName} leads.`;
+  if (product) return `${products.length} picks close to this ${product.category.toLowerCase()} — starting with ${firstName}.`;
+  return `${products.length} picks for "${rawQuery}" — ${firstName} is the best match.`;
+}
+
+function showConciergeSayLoading() {
+  const reply = document.querySelector("#conciergeReply");
+  if (!reply) return;
+  reply.innerHTML = `<p class="concierge-thinking"><span></span><span></span><span></span></p>`;
 }
 
 function renderConciergeReply(action) {
   const reply = document.querySelector("#conciergeReply");
   if (!reply) return;
+  const picks = (action.products || []).slice(0, 5);
+  const cardsHtml = picks.length
+    ? `<div class="cc-reply-cards">${picks
+        .map(
+          (p) => `
+        <a class="cc-reply-card" href="/product/${encodeURIComponent(p.id)}" title="${escapeAttribute(p.name)}">
+          <span class="cc-reply-card-img"><img src="${escapeAttribute(p.image)}" alt="${escapeAttribute(p.name)}" loading="lazy" /></span>
+          <span class="cc-reply-card-meta">
+            <span class="cc-reply-card-name">${escapeHtml(p.name.split(" ").slice(0, 5).join(" "))}</span>
+            <span class="cc-reply-card-price">${money.format(p.price)}</span>
+          </span>
+        </a>`
+        )
+        .join("")}</div>`
+    : "";
   reply.innerHTML = `
     <strong>${escapeHtml(action.pageTitle)}</strong>
     <p>${escapeHtml(action.say)}</p>
+    ${cardsHtml}
   `;
 }
 
@@ -908,13 +1083,22 @@ function clearConciergeResults() {
   renderFloatingDynamicCard();
 }
 
-function hydrateDynamicPageFromUrl() {
+async function hydrateDynamicPageFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const encoded = params.get("cc");
   if (!encoded) return;
-  const query = decodeDynamicQuery(encoded);
-  if (!query) return;
-  const action = runConcierge(query, { syncUrl: false, speak: false });
+  const decoded = decodeDynamicQuery(encoded);
+  if (!decoded) return;
+
+  let query = decoded;
+  if (decoded.includes("\x00")) {
+    const [q, productId] = decoded.split("\x00");
+    query = q;
+    state.currentProduct = state.catalog.products.find((p) => p.id === productId) || null;
+  }
+
+  showConciergeSayLoading();
+  const action = await runConcierge(query, { syncUrl: false, speak: false });
   renderConciergeReply(action);
 }
 
@@ -928,7 +1112,9 @@ function syncDynamicPageUrl(query) {
 }
 
 function renderDynamicPageAction(query) {
-  const href = `/marketplace.html?cc=${encodeURIComponent(encodeDynamicQuery(query))}`;
+  if (!state.conciergeResults?.products?.length) return "";
+  const payload = state.currentProduct ? `${query}\x00${state.currentProduct.id}` : query;
+  const href = `/marketplace.html?cc=${encodeURIComponent(encodeDynamicQuery(payload))}`;
   if (document.body.dataset.page === "product") {
     return `<a href="${escapeAttribute(href)}">Open page</a>`;
   }
@@ -1009,6 +1195,12 @@ function rememberList(key, value) {
 }
 
 function renderProductCard(product) {
+  const reviewLine = product.reviewCount > 0
+    ? `<div class="product-rating">
+        <span class="product-stars">${"★".repeat(Math.round(product.rating || 0))}${"☆".repeat(5 - Math.round(product.rating || 0))}</span>
+        <span class="product-review-count">${product.reviewCount >= 1000 ? (product.reviewCount / 1000).toFixed(1) + "k" : product.reviewCount}</span>
+      </div>`
+    : "";
   return `
     <article class="product-card">
       <a class="product-image" href="/product/${encodeURIComponent(product.id)}" aria-label="${escapeAttribute(product.name)}">
@@ -1022,7 +1214,8 @@ function renderProductCard(product) {
           </h3>
           <span class="product-price">${money.format(product.price)}</span>
         </div>
-        <div class="product-sub">${escapeHtml(product.category)} · ${escapeHtml(product.useCase)} · ${escapeHtml(product.mood)}</div>
+        ${reviewLine}
+        <div class="product-sub">${escapeHtml(product.category)} · ${escapeHtml(product.mood)}</div>
         <div class="tag-row">${product.tags.slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
     </article>
