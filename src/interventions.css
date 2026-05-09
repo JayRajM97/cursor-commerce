@@ -351,9 +351,9 @@ kbd {
   position: fixed;
   top: 0;
   transform: translate3d(40px, 240px, 0);
-  transition: transform 80ms linear;
   width: 56px;
-  z-index: 60;
+  will-change: transform;
+  z-index: 2147483600;
 }
 
 .iv-mascot-glow {
