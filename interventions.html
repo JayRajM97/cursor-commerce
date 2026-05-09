@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interventions · Cursor Commerce</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" />
+  <link rel="stylesheet" href="/src/marketplace.css" />
+  <link rel="stylesheet" href="/src/interventions.css" />
+</head>
+<body data-page="interventions">
+  <header class="iv-header">
+    <div class="iv-brand">
+      <span class="iv-brand-mark"></span>
+      <span>Cursor Commerce · Interventions</span>
+    </div>
+    <div class="iv-mode-indicator" id="modeIndicator">
+      <span class="iv-mode-dot"></span>
+      <span class="iv-mode-label">Docked</span>
+    </div>
+  </header>
+
+  <nav class="iv-tabs" id="tabs" role="tablist">
+    <button class="iv-tab is-active" type="button" role="tab" data-tab="interventions" aria-selected="true">Current Interventions</button>
+    <button class="iv-tab" type="button" role="tab" data-tab="brink" aria-selected="false">Brink vs the world</button>
+  </nav>
+
+  <main class="iv-spec" id="tabInterventions" data-panel="interventions">
+    <p class="iv-eyebrow">Companion · interaction spec</p>
+    <h1>Every intervention, on one page.</h1>
+    <p class="iv-lede">
+      Modes, animations, voice, page behaviors, concierge logic, and what the agent knows. The companion is live on the bottom right —
+      press <kbd>Space</kbd> to talk, click the mascot to follow.
+    </p>
+
+    <section class="iv-section">
+      <h2>Companion modes</h2>
+      <ul>
+        <li><strong>Voice copilot</strong> — always-on voice concierge. Cues, talks, suggests as you browse.</li>
+        <li><strong>Cursor copilot</strong> — follows your mouse, drops contextual nudges near the cursor.</li>
+        <li><strong>Yoda copilot</strong> — observes silently, builds a profile, then follows with smarter suggestions.</li>
+        <li><strong>Dock + move</strong> — docked like a bot icon, detaches and follows when you engage.</li>
+        <li><strong>Studio</strong> — side panel for deeper interactions (try-on, comparisons, bundles). Opens from companion CTA.</li>
+      </ul>
+    </section>
+
+    <section class="iv-section">
+      <h2>Companion animations</h2>
+      <ul>
+        <li><strong>Vacuum absorb</strong> — particles flow from product images, text, prices into the companion. "I'm reading the page."</li>
+        <li><strong>Squiggly thinking</strong> — dotted lines trace around the companion, connecting and rearranging. Eyes narrow.</li>
+        <li><strong>Particle burst</strong> — compressed particles explode outward softly when response is ready.</li>
+        <li><strong>Eye tracking</strong> — pupils follow cursor with a lazy delay.</li>
+        <li><strong>Blink states</strong> — slow (idle), double (attention), wide (about to speak), squint (thinking).</li>
+        <li><strong>Breathing glow</strong> — ambient pulse, intensity rises when there's something to say.</li>
+        <li><strong>Product orbit</strong> — 4–6 product thumbnails orbit the companion. Tappable. Companion looks at the recommended one.</li>
+      </ul>
+    </section>
+
+    <section class="iv-section">
+      <h2>Voice interactions</h2>
+      <ul>
+        <li>Hold <kbd>Space</kbd> (desktop) or tap mic (mobile) to speak.</li>
+        <li><strong>Wave bars</strong> — five vertical bars pulse with audio amplitude while listening.</li>
+        <li><strong>Connecting dots</strong> — key terms appear and connect ("crystals" — "under $5" — "warm tones"), then absorb into the companion.</li>
+        <li><strong>Voice ring</strong> — expanding ripple pulses outward when it speaks back.</li>
+        <li><strong>Multi-turn context</strong> — "show me crystals under $5" → "now just the warm ones" works without re-explaining.</li>
+      </ul>
+    </section>
+
+    <section class="iv-section">
+      <h2>Page-level interactions</h2>
+      <ul>
+        <li><strong>Grid morph</strong> — non-matching products shrink and fade, matches scale up and rearrange.</li>
+        <li><strong>Dynamic page generation</strong> — voice query produces a curated page: "Curated for you: Desk Crystals, Warm Tones, Under $5".</li>
+        <li><strong>Card highlight</strong> — subtle glow on product cards when the companion detects hesitation.</li>
+        <li><strong>Inline badge</strong> — contextual tags fade in: "Lowest in 30 days" or "Runs small".</li>
+      </ul>
+    </section>
+
+    <section class="iv-section">
+      <h2>Concierge behaviors</h2>
+      <ul>
+        <li><strong>Proactive greeting</strong> — "I see 38 products here. What are you looking for?"</li>
+        <li><strong>Context questions</strong> — "Where are you putting this?" → "What color is your desk?"</li>
+        <li><strong>Color/room matching</strong> — "Yellow pops against white. For subtle, try the selenite."</li>
+        <li><strong>Memory offer</strong> — "Save this so I can suggest similar things as you browse?"</li>
+        <li><strong>Cross-category connection</strong> — "Crystals + cushions — decorating a room? Here's a mood board."</li>
+        <li><strong>Bundle builder</strong> — "Put these together as a set? Total: $24.50."</li>
+        <li><strong>Cart threshold nudge</strong> — "$8 from free shipping. Want a small add-on?"</li>
+        <li><strong>Upsell with context</strong> — only after trust: "Jade pagoda at $19.90 is the statement piece."</li>
+      </ul>
+    </section>
+
+    <section class="iv-section">
+      <h2>Knowledge base</h2>
+      <ul>
+        <li><strong>Knows</strong> — full catalog (names, prices, colors, sizes, materials, availability), brand info, shipping, returns, FAQs, review summaries, size/fit data.</li>
+        <li><strong>Doesn't reveal</strong> — sales numbers, internal margins, inventory counts, revenue.</li>
+      </ul>
+    </section>
+
+    <section class="iv-section">
+      <h2>Positioning</h2>
+      <ul>
+        <li><strong>Mid-right (default)</strong> — vertically centered, doesn't overlap content.</li>
+        <li><strong>Logo emerge</strong> — slides out of header logo on activation, returns on dismiss.</li>
+        <li><strong>Bottom-right dock</strong> — familiar bot position, for conservative brands.</li>
+      </ul>
+    </section>
+
+    <p class="iv-foot">Live demo on this page · Floating concierge bottom-right · Mascot top-left</p>
+  </main>
+
+  <main class="iv-spec iv-spec-wide" id="tabBrink" data-panel="brink" hidden>
+    <p class="iv-eyebrow">Positioning · Brink vs the world</p>
+    <h1>Not a popup. Not a chatbot. A shopkeeper.</h1>
+    <p class="iv-lede">
+      Real-time AI that sells, in-session, autonomously. Below — what the rest of the Shopify app store says, and what we say back.
+    </p>
+
+    <section class="iv-section">
+      <h2>What competitors say vs. what Brink says</h2>
+      <div class="iv-table-wrap">
+        <table class="iv-table">
+          <thead>
+            <tr>
+              <th>What competitors say</th>
+              <th>Brink — angle 1</th>
+              <th>Brink — angle 2</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>"Improve your conversion rate"</td><td>Turn the first session into the first sale</td><td>We don't lift conversion. We catch the ones you'd lose</td></tr>
+            <tr><td>"AI-powered popups"</td><td>An AI shopkeeper that lives on your store</td><td>Popups interrupt. We assist.</td></tr>
+            <tr><td>"Smart targeting and segmentation"</td><td>One shopper, one experience — generated live</td><td>Segments are dead. Real-time intent is the unlock</td></tr>
+            <tr><td>"Capture emails with popups"</td><td>We close the sale. Email is your fallback, not ours</td><td>Why retarget when you can convert in-session?</td></tr>
+            <tr><td>"Analytics and insights dashboard"</td><td>We don't show you data. We act on it</td><td>Dashboards tell you what happened. Brink changes what happens next</td></tr>
+            <tr><td>"Easy to set up, 300+ templates"</td><td>Zero templates. Every nudge is built for that shopper</td><td>Templates fire the same way for everyone. Brink doesn't</td></tr>
+            <tr><td>"Exit-intent popups"</td><td>We intervene at the right moment — not the last moment</td><td>Catching them at the door is too late. We catch them at the doubt</td></tr>
+            <tr><td>"Boost AOV with upsells"</td><td>The agent builds a collection around what they actually want</td><td>Static upsells fire blind. Brink sells with context</td></tr>
+            <tr><td>"AI chatbot that answers questions"</td><td>An agent that initiates, not waits to be asked</td><td>Chatbots wait. Shopkeepers walk up to you</td></tr>
+            <tr><td>"Personalized product recommendations"</td><td>Recommendations driven by live behavior, not last week's data</td><td>We don't predict what you'll want. We watch what you do</td></tr>
+            <tr><td>"Reduce cart abandonment"</td><td>We close carts before they're abandoned</td><td>Cart abandonment is a symptom. We fix the cause in-session</td></tr>
+            <tr><td>"Increase customer lifetime value"</td><td>Win the first session. The lifetime takes care of itself</td><td>LTV starts with conversion. Brink starts at minute one</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="iv-section">
+      <h2>Feature comparison</h2>
+      <div class="iv-table-wrap">
+        <table class="iv-table iv-table-matrix">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Wisepops</th>
+              <th>OptiMonk</th>
+              <th>Rep AI</th>
+              <th>Tidio</th>
+              <th>Hotjar</th>
+              <th>Triple Whale</th>
+              <th class="iv-col-brink">Brink</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Real-time behavioral observation</td><td class="x">❌</td><td class="x">❌</td><td class="ok">✅</td><td class="warn">⚠️ visitor tracking only</td><td class="ok">✅ passive</td><td class="x">❌</td><td class="ok iv-col-brink">✅</td></tr>
+            <tr><td>Semantic user profiling</td><td class="x">❌</td><td class="x">❌</td><td class="warn">⚠️ rule-based personas</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅ live inference</td></tr>
+            <tr><td>Proactive in-session intervention</td><td class="warn">⚠️ rule-based</td><td class="warn">⚠️ rule-based</td><td class="ok">✅ chat only</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅ multimodal</td></tr>
+            <tr><td>Dynamic page generation per shopper</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅</td></tr>
+            <tr><td>Voice shopping companion</td><td class="x">❌</td><td class="x">❌</td><td class="ok">✅ chat-based voice</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅ ambient + dynamic page</td></tr>
+            <tr><td>Cursor-aware contextual nudges</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅</td></tr>
+            <tr><td>Inline page injections (not floating widget)</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅</td></tr>
+            <tr><td>Virtual try-on</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅</td></tr>
+            <tr><td>Per-shopper adaptive experience</td><td class="x">❌</td><td class="x">❌</td><td class="warn">⚠️ chat tone only</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅ full storefront</td></tr>
+            <tr><td>Outcome-based pricing</td><td class="x">❌ flat fee</td><td class="x">❌ flat fee</td><td class="x">❌ flat fee</td><td class="x">❌ flat fee</td><td class="x">❌ flat fee</td><td class="x">❌ flat fee</td><td class="ok iv-col-brink">✅ pay for results</td></tr>
+            <tr><td>In-session attribution</td><td class="x">❌</td><td class="x">❌</td><td class="warn">⚠️ chat-attributed only</td><td class="x">❌</td><td class="x">❌</td><td class="warn">⚠️ post-hoc</td><td class="ok iv-col-brink">✅ clean</td></tr>
+            <tr><td>Works without typing or clicking</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="x">❌</td><td class="ok iv-col-brink">✅ behavior-led</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="iv-section">
+      <h2>Hero copy options</h2>
+      <p class="iv-note">Lead pick: <strong>Option 3</strong> · Backup: <strong>Option 4</strong></p>
+      <div class="iv-hero-grid">
+        <article class="iv-hero-card"><span>Option 1</span><h3>Your store, but with a shopkeeper.</h3><p>AI that watches, understands, and sells in-session.</p></article>
+        <article class="iv-hero-card"><span>Option 2</span><h3>Stop letting shoppers leave.</h3><p>An AI agent that converts before they bounce.</p></article>
+        <article class="iv-hero-card is-pick"><span>Option 3 · Lead</span><h3>Not a popup. Not a chatbot. A shopkeeper.</h3><p>Real-time AI that sells, in-session, autonomously.</p></article>
+        <article class="iv-hero-card is-backup"><span>Option 4 · Backup</span><h3>First session. First sale.</h3><p>AI that converts shoppers before they ever leave.</p></article>
+        <article class="iv-hero-card"><span>Option 5</span><h3>The AI that sells your products.</h3><p>Watches every shopper. Closes the ones you'd lose.</p></article>
+        <article class="iv-hero-card"><span>Option 6</span><h3>An AI shopkeeper for your store.</h3><p>In-session intelligence. Pay only for the revenue.</p></article>
+        <article class="iv-hero-card"><span>Option 7</span><h3>Watch it think. Watch it sell.</h3><p>Brink reads your store and acts in real-time.</p></article>
+        <article class="iv-hero-card"><span>Option 8</span><h3>Turn $2 sessions into $25 carts.</h3><p>Conversational AI that builds the basket for you.</p></article>
+        <article class="iv-hero-card"><span>Option 9</span><h3>Conversion is a real-time problem.</h3><p>Brink solves it before the shopper leaves.</p></article>
+        <article class="iv-hero-card"><span>Option 10</span><h3>Stop optimizing. Start selling.</h3><p>Agentic commerce that closes in the first session.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Companion mascot (visual demo of cursor copilot mode) -->
+  <button class="iv-mascot" id="mascot" type="button" aria-label="Companion">
+    <span class="iv-mascot-glow"></span>
+    <span class="iv-mascot-body">
+      <span class="iv-eye"><span class="iv-pupil"></span></span>
+      <span class="iv-eye"><span class="iv-pupil"></span></span>
+      <span class="iv-wave">
+        <span></span><span></span><span></span><span></span><span></span>
+      </span>
+    </span>
+    <span class="iv-mascot-label" id="mascotLabel"></span>
+  </button>
+
+  <div class="iv-tooltip" id="tooltip">Click me — I'll follow your cursor</div>
+
+  <div class="iv-bubble" id="bubble" hidden>
+    <span class="iv-bubble-emoji" id="bubbleEmoji">📏</span>
+    <div class="iv-bubble-body">
+      <p id="bubbleText"></p>
+      <button type="button" id="bubbleCta"></button>
+    </div>
+    <button class="iv-bubble-close" type="button" id="bubbleClose" aria-label="Dismiss">×</button>
+  </div>
+
+  <div class="iv-instructions">
+    <div class="iv-instruction"><kbd>Click mascot</kbd><span>Toggle follow mode</span></div>
+    <div class="iv-instruction"><kbd>Space</kbd><span>Voice — real concierge, real catalog</span></div>
+    <div class="iv-instruction"><kbd>Move cursor</kbd><span>Eyes track you</span></div>
+  </div>
+
+  <script src="/src/marketplace.js" defer></script>
+  <script src="/src/interventions.js" defer></script>
+</body>
+</html>

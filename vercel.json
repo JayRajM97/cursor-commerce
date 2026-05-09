@@ -24,6 +24,10 @@
       "destination": "/marketplace.html"
     },
     {
+      "source": "/interventions",
+      "destination": "/interventions.html"
+    },
+    {
       "source": "/product/:id",
       "destination": "/product.html"
     }

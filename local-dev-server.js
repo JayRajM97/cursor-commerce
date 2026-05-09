@@ -61,6 +61,7 @@ function serveStatic(request, response) {
   let pathname = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
   if (pathname.startsWith("/product/")) pathname = "/product.html";
   if (pathname === "/marketplace") pathname = "/marketplace.html";
+  if (pathname === "/interventions") pathname = "/interventions.html";
   const filePath = path.resolve(ROOT, `.${pathname}`);
 
   if (!filePath.startsWith(ROOT)) {
