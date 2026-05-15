@@ -1,73 +1,213 @@
 # Cursor Commerce
 
-A working prototype for cursor-native commerce assistance. It watches customer journey signals on a product page, then shows a small cursor-near prompt when the shopper appears uncertain.
+Cursor Commerce is a prototype for a real-time shopping concierge that sits on top of an ecommerce catalog. It turns raw product CSVs into a browsable marketplace, tracks product/page context, lets shoppers speak or type open-ended requests, and generates new recommendation surfaces from those requests.
 
-## Try it
+The core idea is simple:
 
-1. For the non-AI static demo, start a static server from this folder:
-
-   ```bash
-   python3 -m http.server 8000
-   ```
-
-2. Open `http://localhost:8000/thesis.html` for the thesis.
-3. Open `http://localhost:8000/demo-apparel-page.html` for the apparel demo, or `http://localhost:8000/marketplace.html` for the CSV-generated catalog.
-4. Hover over the size buttons for a couple of seconds, or click the product image.
-
-The assistant should appear near your cursor with prompts like “Need fit help?” or “Want to see it on yourself?”
-
-## Gemini try-on
-
-The virtual try-on endpoint uses Gemini image editing. By default it uses `gemini-2.0-flash-preview-image-generation` because it is more likely to work on free-tier API keys. To use Nano Banana / Gemini 2.5 Flash Image after enabling billing, set:
-
-```bash
-GEMINI_IMAGE_MODEL=gemini-2.5-flash-image
+```text
+catalog data + shopper context + voice/text intent
+  -> ranked recommendations
+  -> dynamic product page/card
+  -> spoken or written concierge response
 ```
 
-Do not put the real key in frontend JavaScript. For local Vercel testing, create `.env.local`:
+This repo is intentionally lightweight: mostly static HTML/CSS/JS, a local Node server, and a few API endpoints for AI features.
 
-```bash
-GEMINI_API_KEY=your_gemini_api_key_here
-```
+## What It Includes
 
-Then run the Vercel dev server instead of `python3 -m http.server`:
+- **CSV-generated marketplace** from SHEIN and Walmart product exports.
+- **Product detail pages** at `/product/:id`.
+- **Floating concierge** that adapts to product tags, category, reviews, and page context.
+- **Voice flow** using browser recording, OpenAI speech-to-text, OpenAI chat, and OpenAI TTS.
+- **Dynamic recommendation pages** that can be opened or shared with `?cc=...`.
+- **Apparel PDP demo** with cursor-native nudges and virtual try-on.
+- **Interventions demo** for showing product-page nudges in a more visual way.
+- **Thesis page** explaining the broader concept.
 
-```bash
-vercel dev
-```
+## Key Pages
 
-Open the URL printed by Vercel, usually `http://localhost:3000/demo-apparel-page.html`. The AI try-on will not work on the plain Python static server because that server cannot run `/api/try-on`.
+Start the local server, then open:
 
-If you do not have Vercel CLI installed, use the included local server instead:
+- `http://localhost:8000/marketplace.html` - CSV-generated marketplace.
+- `http://localhost:8000/product/shein-39583776` - example product detail page.
+- `http://localhost:8000/product/walmart-527669619` - review-rich clothing example.
+- `http://localhost:8000/demo-apparel-page.html` - apparel PDP assistant demo.
+- `http://localhost:8000/interventions.html` - intervention/mascot demo.
+- `http://localhost:8000/thesis.html` - thesis/story page.
+
+## Run Locally
+
+Use the included local server because it serves static files and also runs the API endpoints.
 
 ```bash
 node local-dev-server.js
 ```
 
-Open `http://localhost:8000/demo-apparel-page.html`. This server serves the static demo and runs `/api/try-on`.
+Then open:
 
-## CSV Catalog Prototype
+```text
+http://localhost:8000/marketplace.html
+```
 
-Phase one of the voice-commerce concept lives at `marketplace.html`.
+The plain Python static server is only useful for viewing static pages. It will not run `/api/chat`, `/api/tts`, `/api/transcribe`, or `/api/try-on`.
 
-- Source CSVs: SHEIN and Walmart product exports from the local Downloads folder.
-- Generated catalog: `data/products.json`.
-- Build command: `node scripts/build-catalog.js`.
-- Product detail routes: `/product/:id`, backed by `product.html`.
+## Environment Variables
 
-The current catalog prioritizes SHEIN crystal/home decor products, with Walmart products included as review-rich support categories.
+Create `.env.local` in the project root. This file is ignored by Git.
 
-For production, add `GEMINI_API_KEY` in the Vercel project environment variables, then redeploy.
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
+OPENAI_CHAT_MODEL=gpt-4o-mini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_IMAGE_MODEL=gemini-2.0-flash-preview-image-generation
+```
 
-For voice transcription, add `OPENAI_API_KEY` for the most reliable demo path. The local transcribe endpoint uses
-`gpt-4o-mini-transcribe` by default and falls back to Gemini only when `OPENAI_API_KEY` is not present.
+Required for the voice concierge:
 
-## What V1 does
+- `OPENAI_API_KEY`
 
-- Detects shopping journey signals on product pages.
-- Extracts title, price, and visible size options when possible.
-- Classifies hovered elements as size selector, size guide, price, image, reviews, or add-to-cart.
-- Triggers one proactive size-help prompt from size hesitation.
-- Recommends a size locally from height, weight, usual size, and preferred fit.
-- Opens a virtual try-on drawer from product-image interest.
-- Calls the serverless Gemini endpoint for AI try-on previews when configured.
+Optional:
+
+- `GEMINI_API_KEY` for virtual try-on image generation.
+- `GEMINI_IMAGE_MODEL` if you want to switch image model.
+- `OPENAI_CHAT_MODEL` to change the concierge response model.
+- `OPENAI_TRANSCRIBE_MODEL` to change speech-to-text model.
+
+## Voice Concierge Flow
+
+On a marketplace or product page:
+
+1. Click the floating concierge card.
+2. Click `Voice`.
+3. Speak a request.
+4. Click `Stop`, or let it auto-stop.
+5. The app transcribes the audio, interprets the shopper intent, ranks the catalog, and updates the floating recommendation card.
+
+Example requests:
+
+```text
+show giftable crystals under ten dollars
+```
+
+```text
+it is for my dark wood desk, show calmer blue options under twenty dollars
+```
+
+```text
+what do reviews say about fit and sizing
+```
+
+The voice loop is continuous: after a response, it can keep listening until stopped.
+
+## How Recommendations Work
+
+The browser loads `data/products.json`, which is generated from the SHEIN and Walmart CSV files.
+
+When the shopper speaks or types, `src/marketplace.js`:
+
+1. Transcribes voice through `/api/transcribe`.
+2. Extracts intent signals like category, color, price, use case, review intent, and mood.
+3. Uses the current product as context when on a PDP.
+4. Scores products from the generated catalog.
+5. Renders a floating dynamic recommendation card.
+6. Optionally generates a concise response through `/api/chat`.
+7. Speaks the response through `/api/tts`.
+
+The current ranking layer is intentionally simple and inspectable. A production version would move scoring to a backend search service, database, and/or vector index.
+
+## CSV Catalog Build
+
+The product catalog is generated by:
+
+```bash
+node scripts/build-catalog.js
+```
+
+Default CSV paths:
+
+```text
+/Users/harshwardhansolanki/Downloads/shein-products.csv
+/Users/harshwardhansolanki/Downloads/walmart-products.csv
+```
+
+Override them if needed:
+
+```bash
+SHEIN_CSV=/path/to/shein.csv WALMART_CSV=/path/to/walmart.csv node scripts/build-catalog.js
+```
+
+Output:
+
+```text
+data/products.json
+```
+
+Tagging is generated from product name, category, root category, brand, colors, and explicit attributes. It avoids adding unrelated tags from noisy long descriptions or related-page metadata.
+
+## API Endpoints
+
+The local server mounts these endpoints:
+
+- `POST /api/transcribe` - converts recorded audio to text with OpenAI first, Gemini fallback.
+- `POST /api/chat` - generates concise product-aware concierge copy.
+- `POST /api/tts` - converts concierge response text to speech.
+- `POST /api/try-on` - virtual try-on image generation for the apparel demo.
+
+## Deployment Notes
+
+`vercel.json` rewrites:
+
+- `/` -> `/thesis.html`
+- `/marketplace` -> `/marketplace.html`
+- `/product/:id` -> `/product.html`
+- `/interventions` -> `/interventions.html`
+
+For Vercel deployment, add the same environment variables in the Vercel project settings.
+
+## Project Structure
+
+```text
+api/
+  chat.js          OpenAI chat endpoint for concierge replies
+  transcribe.js    Speech-to-text endpoint
+  tts.js           Text-to-speech endpoint
+  try-on.js        Gemini image try-on endpoint
+
+data/
+  products.json    Generated catalog
+
+scripts/
+  build-catalog.js CSV normalizer and catalog builder
+
+src/
+  marketplace.js   Marketplace/product concierge logic
+  marketplace.css  Marketplace and concierge styling
+  content.js       Apparel PDP assistant logic
+  styles.css       Apparel PDP assistant styling
+
+marketplace.html   Product grid
+product.html       Product detail route shell
+demo-apparel-page.html
+interventions.html
+thesis.html
+local-dev-server.js
+```
+
+## Demo Script
+
+1. Open `marketplace.html`.
+2. Say: "This storefront is generated from raw product data."
+3. Scroll or open a product to trigger context-aware concierge nudges.
+4. Open a crystal product and ask: "It is for my dark wood desk. Show calmer blue options under twenty dollars."
+5. Show the floating dynamic recommendation card.
+6. Open Levi's jeans and ask: "What do reviews say about fit and sizing?"
+7. Explain that the same layer works across home decor, apparel, footwear, beauty, and review-rich products.
+
+## Current Prototype Limits
+
+- Product ranking is local and rule-based.
+- CSV data can be noisy, so catalog quality depends on input quality.
+- Voice requires microphone permission and a working `OPENAI_API_KEY`.
+- The try-on endpoint requires a Gemini key with image-generation quota.
+- This is not a production ecommerce backend yet; it is a working concept surface.
